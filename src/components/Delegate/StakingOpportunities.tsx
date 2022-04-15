@@ -32,7 +32,10 @@ import {
   selectAssetByCAIP19,
   selectMarketDataById,
 } from 'state/slices/selectors'
-import { selectSingleValidator } from 'state/slices/validatorDataSlice/selectors'
+import {
+  selectAllValidatorsData,
+  selectSingleValidator,
+} from 'state/slices/validatorDataSlice/selectors'
 import { useAppSelector } from 'state/store'
 
 type StakingOpportunitiesProps = {
@@ -78,16 +81,16 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
   const accountSpecifier = accountSpecifiers?.[0]
 
   const accounts = useAppSelector(state => selectPortfolioAccounts(state))
+  const validatorsData = useAppSelector(state => selectAllValidatorsData(state))
   // TODO: This should be its own selector as we have currently
+  const validatorIds = accounts?.[accountSpecifier]?.validatorIds
   const rows = useMemo(
     () =>
-      // selectValidatorDataByValidatorIds
-      // selectStakingDataByValidatorIds
-      accounts?.[accountSpecifier]?.validatorIds.map(validatorId => ({
-        validatorId,
-        accountSpecifier,
-      })) || [],
-    [accountSpecifier, accounts],
+      (accounts?.[accountSpecifier]?.validatorIds || []).map(validatorId => ({
+        ...validatorsData[validatorId],
+        // TODO: make this a selector and return staking data along with it so react-table components stay dumb
+      })),
+    [validatorIds, accountSpecifier, accounts, validatorsData],
   )
 
   const { cosmosGetStarted, cosmosStaking } = useModal()
@@ -111,12 +114,10 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         id: 'moniker',
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validator = useAppSelector(state =>
-            selectSingleValidator(state, row.original.validatorId),
-          )
+          const validator = row.original
 
           return (
-            <Skeleton isLoaded={Boolean(validator)}>
+            <Skeleton isLoaded={Boolean(Object.keys(validator).length)}>
               <ValidatorName
                 validatorAddress={validator?.address || ''}
                 moniker={validator?.moniker || ''}
@@ -132,12 +133,10 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         id: 'apr',
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validator = useAppSelector(state =>
-            selectSingleValidator(state, row.original.validatorId),
-          )
+          const validator = row.original
 
           return (
-            <Skeleton isLoaded={Boolean(validator)}>
+            <Skeleton isLoaded={Boolean(Object.keys(validator).length)}>
               <AprTag percentage={validator?.apr} showAprSuffix />
             </Skeleton>
           )
@@ -150,9 +149,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         isNumeric: true,
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validator = useAppSelector(state =>
-            selectSingleValidator(state, row.original.validatorId),
-          )
+          const validator = row.original
 
           const totalBondings = useAppSelector(state =>
             selectTotalBondingsBalanceByAssetId(
@@ -163,7 +160,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
             ),
           )
 
-          return Boolean(validator) ? (
+          return Boolean(Object.keys(validator).length) ? (
             <Amount.Crypto
               value={bnOrZero(totalBondings)
                 .div(`1e+${asset.precision}`)
@@ -184,14 +181,13 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         id: 'rewards',
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validator = useAppSelector(state =>
-            selectSingleValidator(state, row.original.validatorId),
-          )
+          const validator = row.original
+          if (!Object.keys(validator).length) return null
           const rewards = useAppSelector(state =>
-            selectRewardsByValidator(state, row.original.validatorId),
+            selectRewardsByValidator(state, accountSpecifier, validator.address),
           )
 
-          return Boolean(validator) ? (
+          return Boolean(Object.keys(validator)) ? (
             <HStack fontWeight={'normal'}>
               <Amount.Crypto
                 value={bnOrZero(rewards)

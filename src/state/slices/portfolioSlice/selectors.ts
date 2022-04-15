@@ -14,7 +14,6 @@ import { selectAssets } from 'state/slices/assetsSlice/selectors'
 import { selectMarketData } from 'state/slices/marketDataSlice/selectors'
 import { accountIdToFeeAssetId } from 'state/slices/portfolioSlice/utils'
 import { selectBalanceThreshold } from 'state/slices/preferencesSlice/selectors'
-import { selectValidatorAddress } from 'state/slices/validatorDataSlice/selectors'
 
 import { AccountSpecifier } from '../accountSpecifiersSlice/accountSpecifiersSlice'
 import { PubKey } from './portfolioSliceCommon'
@@ -100,6 +99,8 @@ type ParamFilter = {
   accountId: AccountSpecifier
 }
 
+const selectValidatorAddress = (_state: ReduxState, id: CAIP19, validatorAddress: PubKey) =>
+  validatorAddress
 const selectAssetIdParam = (_state: ReduxState, id: CAIP19) => id
 const selectAssetIdParamFromFilter = (_state: ReduxState, paramFilter: ParamFilter) =>
   paramFilter.assetId
@@ -772,7 +773,6 @@ export const selectAllUnbondingsEntriesByAssetIdAndValidator = createSelector(
   selectAllUnbondingsEntriesByAssetId,
   selectValidatorAddress,
   (unbondingEntries, validatorAddress) => {
-    console.log({ validatorAddress, unbondingEntries })
     return unbondingEntries[validatorAddress]
   },
 )
@@ -796,8 +796,9 @@ export const selectUnbondingCryptoAmountByAssetIdAndValidator = createSelector(
 export const selectTotalBondingsBalanceByAssetId = createSelector(
   selectUnbondingCryptoAmountByAssetIdAndValidator,
   selectDelegationCryptoAmountByAssetIdAndValidator,
-  (unbondingCryptoBalance, delegationCryptoBalance): string =>
-    bnOrZero(unbondingCryptoBalance).plus(bnOrZero(delegationCryptoBalance)).toString(),
+  (unbondingCryptoBalance, delegationCryptoBalance): string => {
+    return bnOrZero(unbondingCryptoBalance).plus(bnOrZero(delegationCryptoBalance)).toString()
+  },
 )
 
 export const selectRewardsByAccountSpecifier = createDeepEqualOutputSelector(
@@ -845,6 +846,8 @@ export const selectRewardsByValidator = createDeepEqualOutputSelector(
     const rewards = cosmosAccount.stakingData.rewards?.find(
       rewardEntry => rewardEntry.validator.address === validatorAddress,
     )
+
+    console.log({ cosmosAccount, rewards, validatorAddress })
 
     return rewards.rewards
       .reduce((acc, current) => {
