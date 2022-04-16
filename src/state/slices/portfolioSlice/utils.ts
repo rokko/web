@@ -9,12 +9,13 @@ import {
   UtxoAccountType,
 } from '@shapeshiftoss/types'
 import cloneDeep from 'lodash/cloneDeep'
+import groupBy from 'lodash/groupBy'
 import last from 'lodash/last'
 import toLower from 'lodash/toLower'
 import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 
 import { AccountSpecifier } from '../accountSpecifiersSlice/accountSpecifiersSlice'
-import { initialState, Portfolio } from './portfolioSliceCommon'
+import { initialState, Portfolio, PortfolioAccountWithStakingData } from './portfolioSliceCommon'
 
 export type UtxoParamsAndAccountType = {
   utxoParams: { scriptType: BTCInputScriptType; bip44Params: BIP44Params }
@@ -180,7 +181,7 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         portfolio.accountBalances.ids.push(accountSpecifier)
         portfolio.accountSpecifiers.ids.push(accountSpecifier)
 
-        portfolio.accounts.byId[accountSpecifier] = { assetIds: [], validatorIds: [] }
+        portfolio.accounts.byId[accountSpecifier] = { assetIds: [] }
         portfolio.accounts.byId[accountSpecifier].assetIds.push(caip19)
         portfolio.accounts.ids.push(accountSpecifier)
 
@@ -299,6 +300,7 @@ export const accountToPortfolio: AccountToPortfolio = args => {
             rewards: [],
           },
           validatorIds: [],
+          stakingDataByValidatorId: {},
         }
 
         portfolio.accounts.byId[accountSpecifier].assetIds.push(caip19)
@@ -315,6 +317,49 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         )
 
         portfolio.accounts.byId[accountSpecifier].validatorIds = uniqueValidatorAddresses
+        portfolio.accounts.byId[accountSpecifier].stakingDataByValidatorId = {}
+
+        console.log('one call')
+        // TODO: Make it its own util?
+        uniqueValidatorAddresses.forEach(validatorAddress => {
+          const validatorRewards = stakingData.rewards.find(
+            validatorRewards => validatorRewards.validator.address === validatorAddress,
+          )
+          const rewards = groupBy(validatorRewards?.rewards, rewardEntry => rewardEntry.assetId)
+          // TODO: Do we need this? There might only be one entry per validator address actually
+          const delegationEntries = stakingData.delegations.filter(
+            delegation => delegation.validator.address === validatorAddress,
+          )
+          // TODO: Do we need this? There might only be one entry per validator address actually
+          const undelegationEntries = stakingData.undelegations.find(
+            undelegation => undelegation.validator.address === validatorAddress,
+          )
+          const delegations = groupBy(delegationEntries, delegationEntry => delegationEntry.assetId)
+          const undelegations = groupBy(
+            undelegationEntries?.entries,
+            undelegationEntry => undelegationEntry.assetId,
+          )
+
+          const uniqueAssetIds = Array.from(
+            new Set([
+              ...Object.keys(delegations),
+              ...Object.keys(undelegations),
+              ...Object.keys(rewards),
+            ]),
+          )
+
+          portfolio.accounts.byId[accountSpecifier].stakingDataByValidatorId[validatorAddress] = {}
+          uniqueAssetIds.forEach(assetId => {
+            portfolio.accounts.byId[accountSpecifier].stakingDataByValidatorId[validatorAddress][
+              assetId
+            ] = {
+              delegations: delegations[assetId],
+              undelegations: undelegations[assetId],
+              rewards: rewards[assetId],
+            }
+          })
+        })
+
         portfolio.accounts.ids.push(accountSpecifier)
 
         portfolio.assetBalances.byId[caip19] = sumBalance(

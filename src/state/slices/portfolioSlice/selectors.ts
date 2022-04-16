@@ -16,6 +16,7 @@ import { accountIdToFeeAssetId } from 'state/slices/portfolioSlice/utils'
 import { selectBalanceThreshold } from 'state/slices/preferencesSlice/selectors'
 
 import { AccountSpecifier } from '../accountSpecifiersSlice/accountSpecifiersSlice'
+import { selectAllValidatorsData, selectSingleValidator } from '../selectors'
 import { PubKey } from './portfolioSliceCommon'
 import {
   PortfolioAccountBalances,
@@ -846,8 +847,6 @@ export const selectRewardsByValidator = createDeepEqualOutputSelector(
     const rewards = cosmosAccount.stakingData.rewards?.find(
       rewardEntry => rewardEntry.validator.address === validatorAddress,
     )
-
-    console.log({ cosmosAccount, rewards, validatorAddress })
 
     return rewards.rewards
       .reduce((acc, current) => {
