@@ -46,7 +46,7 @@ export const TradeConfirm = ({ history }: RouterProps) => {
     number: { toFiat },
   } = useLocaleFormatter({ fiatType: 'USD' })
   const {
-    state: { wallet },
+    state: { wallet, isDemoWallet },
   } = useWallet()
   const { chain, tokenId } = sellAsset.currency
   const network = NetworkTypes.MAINNET
@@ -207,6 +207,7 @@ export const TradeConfirm = ({ history }: RouterProps) => {
                 width='full'
                 mt={6}
                 type='submit'
+                isDisabled={isDemoWallet}
               >
                 <Text translation='trade.confirmAndTrade' />
               </Button>

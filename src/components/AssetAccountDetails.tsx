@@ -2,6 +2,7 @@ import { Stack } from '@chakra-ui/react'
 import { CAIP19 } from '@shapeshiftoss/caip'
 import { Route } from 'Routes/helpers'
 import { AssetTransactionHistory } from 'components/TransactionHistory/AssetTransactionHistory'
+import { useWallet } from 'hooks/useWallet/useWallet'
 import { TradeCard } from 'pages/Dashboard/TradeCard'
 import { AccountSpecifier } from 'state/slices/accountSpecifiersSlice/accountSpecifiersSlice'
 
@@ -22,6 +23,9 @@ type AssetDetailsProps = {
 }
 
 export const AssetAccountDetails = ({ assetId: caip19, accountId }: AssetDetailsProps) => {
+  const {
+    state: { isDemoWallet },
+  } = useWallet()
   return (
     <Main titleComponent={<AssetHeader assetId={caip19} accountId={accountId} />}>
       <Stack
@@ -33,7 +37,7 @@ export const AssetAccountDetails = ({ assetId: caip19, accountId }: AssetDetails
         <Stack spacing={4} flex='1 1 0%' width='full'>
           <AssetChart accountId={accountId} assetId={caip19} isLoaded={true} />
           {accountId && <AccountAssets assetId={caip19} accountId={accountId} />}
-          <AssetAccounts assetId={caip19} accountId={accountId} />
+          {!isDemoWallet && <AssetAccounts assetId={caip19} accountId={accountId} />}
           <EarnOpportunities assetId={caip19} accountId={accountId} />
           <UnderlyingToken assetId={caip19} accountId={accountId} />
           <AssetTransactionHistory limit={3} assetId={caip19} accountId={accountId} />

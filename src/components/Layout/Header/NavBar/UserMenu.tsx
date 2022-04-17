@@ -130,10 +130,14 @@ const WalletButton: FC<WalletButtonProps> = ({
 
 export const UserMenu: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
   const { state, dispatch, disconnect } = useWallet()
-  const { isConnected, walletInfo, type } = state
+  const { isConnected, walletInfo, type, isDemoWallet } = state
   const hasWallet = Boolean(walletInfo?.deviceId)
   const handleConnect = () => {
     onClick && onClick()
+    if (isDemoWallet) {
+      // If we are using a Demo Wallet, reset the state, then show the Connect a wallet modal
+      dispatch({ type: WalletActions.RESET_STATE })
+    }
     dispatch({ type: WalletActions.SET_WALLET_MODAL, payload: true })
   }
 

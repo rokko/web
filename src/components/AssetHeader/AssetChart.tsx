@@ -27,6 +27,7 @@ import { StakingUpArrowIcon } from 'components/Icons/StakingUpArrow'
 import { PriceChart } from 'components/PriceChart/PriceChart'
 import { RawText, Text } from 'components/Text'
 import { useLocaleFormatter } from 'hooks/useLocaleFormatter/useLocaleFormatter'
+import { useWallet } from 'hooks/useWallet/useWallet'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import { AccountSpecifier } from 'state/slices/accountSpecifiersSlice/accountSpecifiersSlice'
 import {
@@ -64,7 +65,10 @@ export const AssetChart = ({ accountId, assetId, isLoaded }: AssetChartProps) =>
   const marketData = useAppSelector(state => selectMarketDataById(state, assetId))
   const { price } = marketData || {}
   const assetPrice = toFiat(price) ?? 0
-  const [view, setView] = useState(accountId ? View.Balance : View.Price)
+  const {
+    state: { isDemoWallet },
+  } = useWallet()
+  const [view, setView] = useState(accountId && !isDemoWallet ? View.Balance : View.Price)
   const filter = useMemo(() => ({ assetId, accountId }), [assetId, accountId])
   const translate = useTranslate()
 
@@ -90,9 +94,11 @@ export const AssetChart = ({ accountId, assetId, isLoaded }: AssetChartProps) =>
         >
           <Skeleton isLoaded={isLoaded} textAlign='center'>
             <ButtonGroup size='sm' colorScheme='blue' variant='ghost'>
-              <Button isActive={view === View.Balance} onClick={() => setView(View.Balance)}>
-                <Text translation='assets.assetDetails.assetHeader.balance' />
-              </Button>
+              {!isDemoWallet && (
+                <Button isActive={view === View.Balance} onClick={() => setView(View.Balance)}>
+                  <Text translation='assets.assetDetails.assetHeader.balance' />
+                </Button>
+              )}
               <Button isActive={view === View.Price} onClick={() => setView(View.Price)}>
                 <Text translation='assets.assetDetails.assetHeader.price' />
               </Button>

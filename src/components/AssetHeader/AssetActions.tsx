@@ -21,17 +21,18 @@ export const AssetActions = ({ isLoaded, assetId, accountId, cryptoBalance }: As
   const { send, receive } = useModal()
   const translate = useTranslate()
   const {
-    state: { isConnected },
+    state: { isConnected, isDemoWallet },
     dispatch,
   } = useWallet()
   const asset = useAppSelector(state => selectAssetByCAIP19(state, assetId))
 
   const handleWalletModalOpen = () =>
     dispatch({ type: WalletActions.SET_WALLET_MODAL, payload: true })
+  const canSendAndReceive = isConnected && !isDemoWallet
   const handleSendClick = () =>
-    isConnected ? send.open({ asset: asset, accountId }) : handleWalletModalOpen()
+    canSendAndReceive ? send.open({ asset: asset, accountId }) : handleWalletModalOpen()
   const handleReceiveClick = () =>
-    isConnected ? receive.open({ asset: asset, accountId }) : handleWalletModalOpen()
+    canSendAndReceive ? receive.open({ asset: asset, accountId }) : handleWalletModalOpen()
   const hasValidBalance = bnOrZero(cryptoBalance).gt(0)
 
   return (
@@ -73,7 +74,7 @@ export const AssetActions = ({ isLoaded, assetId, accountId, cryptoBalance }: As
         <Button
           onClick={handleSendClick}
           leftIcon={<ArrowUpIcon />}
-          isDisabled={!hasValidBalance}
+          isDisabled={!hasValidBalance || isDemoWallet}
           width='full'
           data-test='asset-action-send'
         >
@@ -88,6 +89,7 @@ export const AssetActions = ({ isLoaded, assetId, accountId, cryptoBalance }: As
         <Button
           onClick={handleReceiveClick}
           leftIcon={<ArrowDownIcon />}
+          isDisabled={isDemoWallet}
           width='full'
           data-test='asset-action-receive'
         >

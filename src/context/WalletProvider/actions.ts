@@ -20,6 +20,7 @@ export enum WalletActions {
   OPEN_KEEPKEY_INITIALIZE = 'OPEN_KEEPKEY_INITIALIZE',
   SET_AWAITING_DEVICE_INTERACTION = 'SET_AWAITING_DEVICE_INTERACTION',
   SET_LAST_DEVICE_INTERACTION_STATUS = 'SET_LAST_DEVICE_INTERACTION_STATUS',
+  SET_IS_DEMO_WALLET = 'SET_IS_DEMO_WALLET',
 }
 
 export type Outcome = 'success' | 'error' | undefined
@@ -63,6 +64,7 @@ export type ActionTypes =
         deviceId: string
       }
     }
+  | { type: WalletActions.SET_IS_DEMO_WALLET; payload: boolean }
   | { type: WalletActions.RESET_STATE }
   | {
       type: WalletActions.OPEN_KEEPKEY_INITIALIZE

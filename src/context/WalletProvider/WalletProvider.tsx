@@ -1,8 +1,12 @@
 import { ComponentWithAs, IconProps } from '@chakra-ui/react'
 import { HDWallet, Keyring } from '@shapeshiftoss/hdwallet-core'
 import { MetaMaskHDWallet } from '@shapeshiftoss/hdwallet-metamask'
+import * as native from '@shapeshiftoss/hdwallet-native'
+import { NativeHDWallet } from '@shapeshiftoss/hdwallet-native'
+import { Vault } from '@shapeshiftoss/hdwallet-native-vault'
 import { PortisHDWallet } from '@shapeshiftoss/hdwallet-portis'
 import { getConfig } from 'config'
+import { PublicWalletXpubs } from 'constants/PublicWalletXpubs'
 import findIndex from 'lodash/findIndex'
 import React, { useCallback, useEffect, useMemo, useReducer } from 'react'
 import { useKeepKeyEventHandler } from 'context/WalletProvider/KeepKey/hooks/useKeepKeyEventHandler'
@@ -46,6 +50,7 @@ export interface InitialState {
   keepKeyPinRequestType: PinMatrixRequestType | null
   awaitingDeviceInteraction: boolean
   lastDeviceInteractionStatus: Outcome
+  isDemoWallet: boolean
 }
 
 const initialState: InitialState = {
@@ -63,6 +68,7 @@ const initialState: InitialState = {
   keepKeyPinRequestType: null,
   awaitingDeviceInteraction: false,
   lastDeviceInteractionStatus: undefined,
+  isDemoWallet: false,
 }
 
 const reducer = (state: InitialState, action: ActionTypes) => {
@@ -142,6 +148,8 @@ const reducer = (state: InitialState, action: ActionTypes) => {
       }
     case WalletActions.SET_LOCAL_WALLET_LOADING:
       return { ...state, isLoadingLocalWallet: action.payload }
+    case WalletActions.SET_IS_DEMO_WALLET:
+      return { ...state, isDemoWallet: action.payload }
     case WalletActions.RESET_STATE:
       return {
         ...state,
@@ -155,6 +163,7 @@ const reducer = (state: InitialState, action: ActionTypes) => {
         keepKeyPinRequestType: null,
         awaitingDeviceInteraction: false,
         lastDeviceInteractionStatus: undefined,
+        isDemoWallet: false,
       }
     default:
       return state
@@ -352,6 +361,45 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }): JSX
     }
   }, [])
 
+  const connectDemo = useCallback(async () => {
+    dispatch({ type: WalletActions.SET_LOCAL_WALLET_LOADING, payload: true })
+    // Import wallet
+    const vault = await Vault.create(undefined, false)
+    vault.meta.set('createdAt', Date.now())
+    const { create: createMnemonic } = native.crypto.Isolation.Engines.Dummy.BIP39.Mnemonic
+    const dummyMnemonic = await createMnemonic(PublicWalletXpubs)
+    vault.set('#mnemonic', String(dummyMnemonic)) // TODO Why do we have to cast this to String?
+    vault.seal()
+    await vault.setPassword('12345678') // TODO - Demo wallet password?
+    const walletLabel = 'DemoWallet' // TODO - Demo wallet name?
+    vault.meta.set('name', walletLabel)
+
+    // Load wallet
+    const deviceId = vault.id
+    const adapter = SUPPORTED_WALLETS[KeyManager.Native].adapter.useKeyring(state.keyring)
+    const wallet = (await adapter.pairDevice(deviceId)) as NativeHDWallet
+    // Why do we have to load this from the vault when we already have it in scope above?
+    // If we don't, then we get a 'Private key not available' error
+    const mnemonic = (await vault.get('#mnemonic')) as native.crypto.Isolation.Core.BIP39.Mnemonic
+    mnemonic.addRevoker?.(() => vault.revoke())
+    await wallet.loadDevice({ mnemonic, deviceId })
+
+    // Dispatch actions
+    dispatch({ type: WalletActions.SET_IS_DEMO_WALLET, payload: true })
+    dispatch({
+      type: WalletActions.SET_WALLET,
+      payload: {
+        wallet,
+        name: walletLabel,
+        icon: SUPPORTED_WALLETS[KeyManager.Native].icon,
+        deviceId,
+        meta: { label: walletLabel },
+      },
+    })
+    dispatch({ type: WalletActions.SET_IS_CONNECTED, payload: true })
+    dispatch({ type: WalletActions.SET_LOCAL_WALLET_LOADING, payload: false })
+  }, [state.keyring])
+
   const create = useCallback(async (type: KeyManager) => {
     dispatch({ type: WalletActions.SET_CONNECTOR_TYPE, payload: type })
     const routeIndex = findIndex(SUPPORTED_WALLETS[type]?.routes, ({ path }) =>
@@ -401,6 +449,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }): JSX
       load,
       setAwaitingDeviceInteraction,
       setLastDeviceInteractionStatus,
+      connectDemo,
     }),
     [
       state,
@@ -410,6 +459,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }): JSX
       load,
       setAwaitingDeviceInteraction,
       setLastDeviceInteractionStatus,
+      connectDemo,
     ],
   )
 

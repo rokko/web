@@ -8,7 +8,7 @@ import { KeyManager } from './KeyManager'
 
 export const SelectModal = () => {
   const {
-    state: { adapters, walletInfo },
+    state: { adapters, walletInfo, isDemoWallet },
     connect,
     create,
   } = useWallet()
@@ -40,7 +40,7 @@ export const SelectModal = () => {
                 >
                   <Flex alignItems='center'>
                     <RawText fontWeight='semibold'>{option.name}</RawText>
-                    {walletInfo?.name === option.name && (
+                    {!isDemoWallet && walletInfo?.name === option.name && (
                       <Tag colorScheme='green' ml={2}>
                         <Text translation='common.connected' />
                       </Tag>

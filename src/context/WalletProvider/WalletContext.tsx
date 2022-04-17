@@ -13,6 +13,7 @@ export interface IWalletContext {
   load: () => void
   setAwaitingDeviceInteraction: (awaitingDeviceInteraction: boolean) => void
   setLastDeviceInteractionStatus: (lastDeviceInteractionStatus: Outcome) => void
+  connectDemo: () => Promise<void>
 }
 
 export const WalletContext = createContext<IWalletContext | null>(null)

@@ -58,7 +58,7 @@ async function connectCypressWallet(
 }
 
 export const ConnectWallet = () => {
-  const { state, dispatch } = useWallet()
+  const { state, dispatch, connectDemo } = useWallet()
   const isCypressTest =
     localStorage.hasOwnProperty('cypressWalletSeed') &&
     localStorage.hasOwnProperty('cypressWalletPassword')
@@ -68,7 +68,13 @@ export const ConnectWallet = () => {
   const translate = useTranslate()
   const query = useQuery<{ returnUrl: string }>()
   useEffect(() => {
-    hasWallet && history.push(query?.returnUrl ? query.returnUrl : '/dashboard')
+    // This works, but is almost certainly not the right way to do it
+    const bitcoinAssetId = 'bip122:000000000019d6689c085ae165831e93/slip44:0'
+    if (hasWallet) {
+      state.isDemoWallet && state.isLoadingLocalWallet
+        ? history.push(`/assets/${bitcoinAssetId}`)
+        : history.push(query?.returnUrl ? query.returnUrl : '/dashboard')
+    }
     // Programmatic login for Cypress tests
     // The first `!state.isConnected` filters any re-render if the wallet is already connected.
     if (isCypressTest && !state.isConnected) {
@@ -160,6 +166,18 @@ export const ConnectWallet = () => {
           data-test='connect-wallet-button'
         >
           <Text translation='connectWalletPage.cta' />
+        </Button>
+
+        <Button
+          size='lg'
+          zIndex={1}
+          colorScheme='gray'
+          mt={12}
+          onClick={connectDemo}
+          isLoading={state.isLoadingLocalWallet}
+          data-test='connect-demo-wallet-button'
+        >
+          <Text translation='connectWalletPage.tryWithoutWallet' />
         </Button>
       </Center>
     </Page>

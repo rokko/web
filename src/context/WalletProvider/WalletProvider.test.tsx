@@ -99,6 +99,20 @@ describe('WalletProvider', () => {
       })
       expect(result.current.state.modal).toBe(false)
     })
+
+    it('can SET_IS_DEMO_WALLET', async () => {
+      const result = await setup()
+
+      expect(result.current.state.isDemoWallet).toBe(false)
+      act(() => {
+        result.current.dispatch({ type: WalletActions.SET_IS_DEMO_WALLET, payload: true })
+      })
+      expect(result.current.state.isDemoWallet).toBe(true)
+      act(() => {
+        result.current.dispatch({ type: WalletActions.SET_IS_DEMO_WALLET, payload: false })
+      })
+      expect(result.current.state.modal).toBe(false)
+    })
   })
 
   describe('connect', () => {
