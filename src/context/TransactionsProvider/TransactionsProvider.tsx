@@ -12,12 +12,14 @@ import {
   selectAccountIdByAddress,
   selectAccountSpecifiers,
   selectAssets,
+  selectPortfolioAccounts,
   selectPortfolioAssetIds,
   selectTxHistoryStatus,
   selectTxIds,
 } from 'state/slices/selectors'
 import { txHistoryApi } from 'state/slices/txHistorySlice/txHistorySlice'
 import { txHistory } from 'state/slices/txHistorySlice/txHistorySlice'
+import { validatorDataApi } from 'state/slices/validatorDataSlice/validatorDataSlice'
 import { store, useAppSelector } from 'state/store'
 
 type TransactionsProviderProps = {
@@ -47,6 +49,7 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
     [accountSpecifiers],
   )
 
+  const portfolioAccounts = useAppSelector(state => selectPortfolioAccounts(state))
   useEffect(() => {
     if (!wallet) return
     if (isEmpty(assets)) return
@@ -97,6 +100,26 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
         const chainAccountSpecifiers = getAccountSpecifiersByChainId(chainId)
         if (isEmpty(chainAccountSpecifiers)) continue
         chainAccountSpecifiers.forEach(accountSpecifierMap => {
+          if (accountSpecifierMap['cosmos:cosmoshub-4']) {
+            const cosmosAccountSpecifier = accountSpecifierMap['cosmos:cosmoshub-4']
+            const cosmosPortfolioAccount =
+              portfolioAccounts[`cosmos:cosmoshub-4:${cosmosAccountSpecifier}`]
+            if (cosmosPortfolioAccount) {
+              const validators = cosmosPortfolioAccount.validatorIds
+
+              validators?.length &&
+                validators.forEach(validatorAddress => {
+                  // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
+                  dispatch(
+                    validatorDataApi.endpoints.getValidatorData.initiate({
+                      // TODO: Make me programmatic
+                      chainId: 'cosmos:cosmoshub-4',
+                      validatorAddress,
+                    }),
+                  )
+                })
+            }
+          }
           const { getAllTxHistory, getFoxyRebaseHistoryByAccountId } = txHistoryApi.endpoints
           const options = { forceRefetch: true }
           dispatch(getAllTxHistory.initiate({ accountSpecifierMap }, options))
