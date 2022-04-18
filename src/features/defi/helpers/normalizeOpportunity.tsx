@@ -5,10 +5,7 @@ import { USDC_PRECISION } from 'constants/UsdcPrecision'
 import { useTranslate } from 'react-polyglot'
 import { useSelector } from 'react-redux'
 import { bnOrZero } from 'lib/bignumber/bignumber'
-import {
-  MergedActiveStakingOpportunity,
-  MergedStakingOpportunity,
-} from 'pages/Defi/hooks/useCosmosStakingBalances'
+import { MergedActiveStakingOpportunity } from 'pages/Defi/hooks/useCosmosStakingBalances'
 import { MergedFoxyOpportunity } from 'pages/Defi/hooks/useFoxyBalances'
 import { useVaultBalances } from 'pages/Defi/hooks/useVaultBalances'
 import { selectAssetIds } from 'state/slices/selectors'
@@ -124,35 +121,37 @@ const transformFoxy = (foxies: MergedFoxyOpportunity[]): EarnOpportunityType[] =
 }
 
 const useTransformCosmosStaking = (
-  cosmosStakingOpportunities: MergedStakingOpportunity[],
+  cosmosStakingOpportunities: MergedActiveStakingOpportunity[],
 ): EarnOpportunityType[] => {
   const translate = useTranslate()
-  return cosmosStakingOpportunities.map(staking => {
-    return {
-      type: DefiType.TokenStaking,
-      assetId: staking.assetId,
-      provider: chainTypeToLabel(staking.chain),
-      contractAddress: staking.address,
-      tokenAddress: staking.tokenAddress,
-      rewardAddress: '',
-      tvl: staking.tvl,
-      apy: staking.apr,
-      chain: staking.chain,
-      moniker: 'TODO',
-      cryptoAmount: '4242', // TODO: from selector
-      fiatAmount: '',
-      showAssetSymbol: true,
-    }
-  })
-  // .sort((opportunityA, opportunityB) => {
-  // return bnOrZero(opportunityA.cryptoAmount).gt(bnOrZero(opportunityB.cryptoAmount)) ? -1 : 1
-  // })
+  return cosmosStakingOpportunities
+    .map(staking => {
+      return {
+        type: DefiType.TokenStaking,
+        assetId: staking.assetId,
+        provider: chainTypeToLabel(staking.chain),
+        contractAddress: staking.address,
+        tokenAddress: staking.tokenAddress,
+        rewardAddress: '',
+        tvl: staking.tvl,
+        apy: staking.apr,
+        chain: staking.chain,
+        cryptoAmount: staking.cryptoAmount ?? '',
+        fiatAmount: staking.fiatAmount ?? '',
+        moniker: staking.moniker,
+        version: translate('defi.validatorMoniker', { moniker: staking.moniker }),
+        showAssetSymbol: true,
+      }
+    })
+    .sort((opportunityA, opportunityB) => {
+      return bnOrZero(opportunityA.cryptoAmount).gt(bnOrZero(opportunityB.cryptoAmount)) ? -1 : 1
+    })
 }
 
 type NormalizeOpportunitiesProps = {
   vaultArray: SupportedYearnVault[]
   foxyArray: MergedFoxyOpportunity[]
-  cosmosStakingOpportunities: MergedStakingOpportunity[]
+  cosmosStakingOpportunities: MergedActiveStakingOpportunity[]
 }
 
 export const useNormalizeOpportunities = ({

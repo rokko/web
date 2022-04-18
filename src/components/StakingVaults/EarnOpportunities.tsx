@@ -14,7 +14,12 @@ import { useWallet } from 'hooks/useWallet/useWallet'
 import { useYearnVaults } from 'hooks/useYearnVaults/useYearnVaults'
 import { useFoxyBalances } from 'pages/Defi/hooks/useFoxyBalances'
 import { AccountSpecifier } from 'state/slices/portfolioSlice/portfolioSliceCommon'
-import { selectAssetByCAIP19, selectFeatureFlag } from 'state/slices/selectors'
+import {
+  selectAccountSpecifier,
+  selectAssetByCAIP19,
+  selectFeatureFlag,
+  selectValidatorIds,
+} from 'state/slices/selectors'
 import { useAppSelector } from 'state/store'
 
 import { StakingTable } from './StakingTable'

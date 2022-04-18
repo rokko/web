@@ -5,10 +5,15 @@ import { BigNumber, bnOrZero } from 'lib/bignumber/bignumber'
 import {
   ActiveStakingOpportunity,
   selectAccountSpecifier,
+  selectAllStakingDataByValidator,
   selectAssetByCAIP19,
   selectMarketDataById,
+  selectValidatorIds,
 } from 'state/slices/selectors'
-import { selectSingleValidator } from 'state/slices/validatorDataSlice/selectors'
+import {
+  selectAllValidatorsData,
+  selectSingleValidator,
+} from 'state/slices/validatorDataSlice/selectors'
 import { useAppDispatch, useAppSelector } from 'state/store'
 
 const SHAPESHIFT_VALIDATOR_ADDRESS = 'cosmosvaloper199mlc7fr6ll5t54w7tts7f4s0cvnqgc59nmuxf'
@@ -46,41 +51,61 @@ export function useCosmosStakingBalances({
   const dispatch = useAppDispatch()
 
   const accountSpecifiers = useAppSelector(state => selectAccountSpecifier(state, asset?.caip2))
-  // const accountSpecifier = accountSpecifiers?.[0] // TODO: maybe remove me maybe not
-
-  const shapeshiftValidator = useAppSelector(state =>
-    selectSingleValidator(state, SHAPESHIFT_VALIDATOR_ADDRESS),
+  const accountSpecifier = accountSpecifiers?.[0] // TODO: maybe remove me, or maybe not
+  const validatorIds = useAppSelector(state => selectValidatorIds(state, accountSpecifier))
+  const stakingDataByValidator = useAppSelector(state =>
+    selectAllStakingDataByValidator(state, accountSpecifier),
   )
-  const stakingOpportunities = useMemo(() => {
-    return [
-      {
-        ...shapeshiftValidator,
-      },
-    ]
-  }, [shapeshiftValidator])
+  const validatorsData = useAppSelector(state => selectAllValidatorsData(state))
+
+  const stakingOpportunities = useMemo(
+    () =>
+      validatorIds.map(validatorId => {
+        const delegatedAmount = bnOrZero(
+          stakingDataByValidator?.[validatorId]?.[assetId]?.delegations?.[0]?.amount,
+        ).toString()
+        const undelegatedEntries =
+          stakingDataByValidator?.[validatorId]?.[assetId]?.undelegations ?? []
+        const totalDelegations = bnOrZero(delegatedAmount)
+          .plus(
+            undelegatedEntries.reduce((acc, current) => {
+              return acc.plus(bnOrZero(current.amount))
+            }, bnOrZero(0)),
+          )
+          .toString()
+        return {
+          ...validatorsData[validatorId],
+          // Delegated/Redelegated + Undelegation
+          // TODO: Optimize this. This can't be a selector since we're iterating and selectors can't be used conditionally.
+          // This isn't optimal, but way better than using a selector in a react-table cell, which makes them not pure and rerenders all over the place
+          cryptoAmount: totalDelegations,
+          // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
+          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards[0],
+        }
+      }),
+    [assetId, stakingDataByValidator, validatorIds, validatorsData],
+  )
 
   const chainId = asset.caip2
 
   const mergedActiveStakingOpportunities = useMemo(() => {
     return Object.values(stakingOpportunities).map(opportunity => {
-      const fiatAmount = bnOrZero(0)
-      // const fiatAmount = bnOrZero(opportunity.cryptoAmount)
-      // .div(`1e+${asset.precision}`)
-      // .times(bnOrZero(marketData.price))
-      // .toFixed(2)
-      //
-      const tvl = bnOrZero(0)
-      // const tvl = bnOrZero(opportunity.tokens)
-      // .div(`1e+${asset.precision}`)
-      // .times(bnOrZero(marketData?.price))
-      // .toString()
+      const fiatAmount = bnOrZero(opportunity.cryptoAmount)
+        .div(`1e+${asset.precision}`)
+        .times(bnOrZero(marketData.price))
+        .toFixed(2)
+
+      const tvl = bnOrZero(opportunity.tokens)
+        .div(`1e+${asset.precision}`)
+        .times(bnOrZero(marketData?.price))
+        .toString()
+
       const data = {
         ...opportunity,
-        cryptoAmount: bnOrZero(0),
-        // cryptoAmount: bnOrZero(opportunity.cryptoAmount)
-        // .div(`1e+${asset?.precision}`)
-        // .decimalPlaces(asset.precision)
-        // .toString(),
+        cryptoAmount: bnOrZero(opportunity.cryptoAmount)
+          .div(`1e+${asset?.precision}`)
+          .decimalPlaces(asset.precision)
+          .toString(),
         tvl,
         fiatAmount,
         chain: asset.chain,
@@ -89,24 +114,7 @@ export function useCosmosStakingBalances({
       }
       return data
     })
-  }, [assetId, asset, marketData])
-
-  const mergedStakingOpportunities = useMemo(() => {
-    return Object.values(stakingOpportunities).map(opportunity => {
-      const tvl = bnOrZero(opportunity.tokens)
-        .div(`1e+${asset.precision}`)
-        .times(bnOrZero(marketData?.price))
-        .toString()
-      const data = {
-        ...opportunity,
-        tvl,
-        chain: asset.chain,
-        assetId,
-        tokenAddress: asset.slip44.toString(),
-      }
-      return data
-    })
-  }, [assetId, asset, marketData, stakingOpportunities])
+  }, [stakingOpportunities, assetId, asset, marketData])
 
   const totalBalance = useMemo(
     () =>
@@ -119,15 +127,16 @@ export function useCosmosStakingBalances({
     [mergedActiveStakingOpportunities],
   )
 
+  console.log({ mergedActiveStakingOpportunities })
+
   useEffect(() => {
     ;(async () => {
-      // if (!isValidatorDataLoaded) return // TODO: use select() to detect loaded state
+      // if (!isValidatorDataLoaded) return // TODO: Used to be like this, this probably goes away: use select() or similar to detect loaded/ing state
     })()
   }, [dispatch, chainId])
 
-  console.log({ mergedStakingOpportunities })
   return {
-    stakingOpportunities: mergedStakingOpportunities,
+    stakingOpportunities: mergedActiveStakingOpportunities,
     isLoaded: true,
     totalBalance: totalBalance.toString(),
   }

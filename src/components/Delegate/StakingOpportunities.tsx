@@ -24,8 +24,6 @@ import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
   ActiveStakingOpportunity,
   selectAllStakingDataByValidator,
-  selectPortfolioAccounts,
-  selectTotalBondingsBalanceByAssetId,
   selectValidatorIds,
 } from 'state/slices/portfolioSlice/selectors'
 import {
@@ -33,10 +31,7 @@ import {
   selectAssetByCAIP19,
   selectMarketDataById,
 } from 'state/slices/selectors'
-import {
-  selectAllValidatorsData,
-  selectSingleValidator,
-} from 'state/slices/validatorDataSlice/selectors'
+import { selectAllValidatorsData } from 'state/slices/validatorDataSlice/selectors'
 import { useAppSelector } from 'state/store'
 
 type StakingOpportunitiesProps = {
@@ -104,11 +99,12 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
           .toString()
         return {
           ...validatorsData[validatorId],
-          totalDelegations,
           // Delegated/Redelegated + Undelegation
           // TODO: Optimize this. This can't be a selector since we're iterating and selectors can't be used conditionally.
           // This isn't optimal, but way better than using a selector in a react-table cell, which makes them not pure and rerenders all over the place
-          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards,
+          totalDelegations,
+          // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
+          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards[0],
         }
       }),
     [validatorsData, assetId, stakingDataByValidator, validatorIds],
@@ -194,7 +190,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         accessor: 'rewards',
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validatorRewards = row.original?.rewards[0]
+          const validatorRewards = row.original?.rewards
           const rewards = validatorRewards?.amount ?? '0'
           if (!Object.keys(validatorRewards).length) return null
 

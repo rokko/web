@@ -43,7 +43,6 @@ export function useEarnBalances(): UseEarnBalancesReturn {
     cosmosStakingOpportunities,
   })
 
-  console.log({ opportunities })
   // When staking, farming, lp, etc are added sum up the balances here
   const totalEarningBalance = bnOrZero(vaultsTotalBalance)
     .plus(totalFoxyBalance)
