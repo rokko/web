@@ -9,7 +9,6 @@ import { clearState, store } from 'state/store'
 
 import {
   selectActiveStakingOpportunityDataByAssetId,
-  selectRewardsAmountByAssetId,
   selectSingleValidator,
   selectStakingDataIsLoaded,
   selectTotalBondingsBalanceByAssetId,
@@ -293,62 +292,6 @@ describe('stakingDataSlice', () => {
             commission: '0.100000000000000000',
             moniker: 'ShapeShift DAO',
           })
-        })
-      })
-    })
-
-    describe('selectRewardsAmountByAssetId', () => {
-      it('returns empty string on initial state', async () => {
-        const selected = selectRewardsAmountByAssetId(
-          store.getState(),
-          cosmosAccountSpecifier,
-          SHAPESHIFT_VALIDATOR_ADDRESS,
-          cosmosAssetId,
-        )
-        expect(selected).toEqual('')
-      })
-
-      describe('validators and staking data are loaded', () => {
-        beforeEach(() => {
-          store.dispatch(
-            stakingData.actions.upsertValidatorData({
-              validators: mockValidatorData,
-            }),
-          )
-          store.dispatch(
-            stakingData.actions.upsertStakingData({
-              accountSpecifier: cosmosAccountSpecifier,
-              stakingData: mockStakingData,
-            }),
-          )
-        })
-
-        it('returns empty string when there is no reward data', async () => {
-          const selected = selectRewardsAmountByAssetId(
-            store.getState(),
-            cosmosAccountSpecifier,
-            'cosmosvaloper1qtxec3ggeuwnca9mmngw7vf6ctw54cppey02fs',
-            cosmosAssetId,
-          )
-          expect(selected).toEqual('')
-
-          const selected2 = selectRewardsAmountByAssetId(
-            store.getState(),
-            cosmosAccountSpecifier,
-            'cosmosvaloper1r9lxkpqre6j4487ut882xchgr7rdtx3x76gtdp',
-            cosmosAssetId,
-          )
-          expect(selected2).toEqual('')
-        })
-
-        it('returns the reward amount when there is a reward', async () => {
-          const selected = selectRewardsAmountByAssetId(
-            store.getState(),
-            cosmosAccountSpecifier,
-            SHAPESHIFT_VALIDATOR_ADDRESS,
-            cosmosAssetId,
-          )
-          expect(selected).toEqual('3.831752143667562385')
         })
       })
     })

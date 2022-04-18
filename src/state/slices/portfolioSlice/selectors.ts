@@ -674,9 +674,6 @@ export const selectPortfolioAccountRows = createDeepEqualOutputSelector(
   },
 )
 
-const selectAccountSpecifierParam = (_state: ReduxState, accountSpecifier: CAIP10) =>
-  accountSpecifier
-
 export type ActiveStakingOpportunity = {
   address: PubKey
   moniker: string
@@ -695,7 +692,7 @@ export type AmountByValidatorAddressType = {
 
 export const selectStakingDataByAccountSpecifier = createSelector(
   selectPortfolioAccounts,
-  selectAccountSpecifierParam,
+  selectAccountSpecifierParamArityFour,
   (portfolioAccounts, accountSpecifier) => {
     return portfolioAccounts?.[accountSpecifier]?.stakingData || null
   },
@@ -789,7 +786,7 @@ export const selectAllUnbondingsEntriesByAssetId = createDeepEqualOutputSelector
 
 export const selectAllUnbondingsEntriesByAssetIdAndValidator = createSelector(
   selectAllUnbondingsEntriesByAssetId,
-  selectValidatorAddress,
+  selectValidatorAddressParamArityFour,
   (unbondingEntries, validatorAddress) => {
     return unbondingEntries[validatorAddress]
   },
@@ -797,8 +794,7 @@ export const selectAllUnbondingsEntriesByAssetIdAndValidator = createSelector(
 
 export const selectUnbondingCryptoAmountByAssetIdAndValidator = createSelector(
   selectUnbondingEntriesByAccountSpecifier,
-  selectAssetIdParamArityFour,
-  (unbondingEntries, selectedAssetId): string => {
+  (unbondingEntries): string => {
     if (!unbondingEntries.length) return '0'
 
     const unbondingCryptoAmountByAssetIdAndValidator = unbondingEntries
@@ -838,23 +834,11 @@ export const selectRewardsByAccountSpecifier = createDeepEqualOutputSelector(
   },
 )
 
-export const selectRewardsAmountByAssetId = createSelector(
-  selectRewardsByAccountSpecifier,
-  selectAssetIdParam,
-  (rewardsByAccountSpecifier, selectedAssetId): string => {
-    if (!rewardsByAccountSpecifier.length) return ''
-
-    const rewards = rewardsByAccountSpecifier.find(rewards => rewards.assetId === selectedAssetId)
-
-    return rewards?.amount || ''
-  },
-)
-
 // TODO: Since we now have clean, almost fully parsed data by validator in the slice, remove me and use it instead
 export const selectRewardsByValidator = createDeepEqualOutputSelector(
   selectPortfolioAccounts,
   selectValidatorAddress,
-  selectAccountSpecifierParam,
+  selectAccountSpecifierParamArityFour,
   (allPortfolioAccounts, validatorAddress, accountSpecifier): string => {
     // TODO: account specifier here
     const cosmosAccount = allPortfolioAccounts?.[accountSpecifier]
@@ -864,6 +848,8 @@ export const selectRewardsByValidator = createDeepEqualOutputSelector(
     const rewards = cosmosAccount.stakingData.rewards?.find(
       rewardEntry => rewardEntry.validator.address === validatorAddress,
     )
+
+    if (!rewards?.rewards.length) return '0'
 
     return rewards.rewards
       .reduce((acc, current) => {

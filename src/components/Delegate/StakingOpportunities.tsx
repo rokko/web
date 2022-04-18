@@ -104,7 +104,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
           // This isn't optimal, but way better than using a selector in a react-table cell, which makes them not pure and rerenders all over the place
           totalDelegations,
           // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
-          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards[0],
+          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards?.[0] ?? '0',
         }
       }),
     [validatorsData, assetId, stakingDataByValidator, validatorIds],
