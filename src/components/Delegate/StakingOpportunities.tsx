@@ -23,9 +23,10 @@ import { useModal } from 'hooks/useModal/useModal'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
   ActiveStakingOpportunity,
+  selectAllStakingDataByValidator,
   selectPortfolioAccounts,
-  selectRewardsByValidator,
   selectTotalBondingsBalanceByAssetId,
+  selectValidatorIds,
 } from 'state/slices/portfolioSlice/selectors'
 import {
   selectAccountSpecifier,
@@ -80,17 +81,37 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
   const accountSpecifiers = useAppSelector(state => selectAccountSpecifier(state, asset?.caip2))
   const accountSpecifier = accountSpecifiers?.[0]
 
-  const accounts = useAppSelector(state => selectPortfolioAccounts(state))
   const validatorsData = useAppSelector(state => selectAllValidatorsData(state))
-  // TODO: This should be its own selector as we have currently
-  const validatorIds = accounts?.[accountSpecifier]?.validatorIds
+  const stakingDataByValidator = useAppSelector(state =>
+    selectAllStakingDataByValidator(state, accountSpecifier),
+  )
+  const validatorIds = useAppSelector(state => selectValidatorIds(state, accountSpecifier))
+
   const rows = useMemo(
     () =>
-      (accounts?.[accountSpecifier]?.validatorIds || []).map(validatorId => ({
-        ...validatorsData[validatorId],
-        // TODO: make this a selector and return staking data along with it so react-table components stay dumb
-      })),
-    [validatorIds, accountSpecifier, accounts, validatorsData],
+      validatorIds.map(validatorId => {
+        const delegatedAmount = bnOrZero(
+          stakingDataByValidator?.[validatorId]?.[assetId]?.delegations?.[0]?.amount,
+        ).toString()
+        const undelegatedEntries =
+          stakingDataByValidator?.[validatorId]?.[assetId]?.undelegations ?? []
+        const totalDelegations = bnOrZero(delegatedAmount)
+          .plus(
+            undelegatedEntries.reduce((acc, current) => {
+              return acc.plus(bnOrZero(current.amount))
+            }, bnOrZero(0)),
+          )
+          .toString()
+        return {
+          ...validatorsData[validatorId],
+          totalDelegations,
+          // Delegated/Redelegated + Undelegation
+          // TODO: Optimize this. This can't be a selector since we're iterating and selectors can't be used conditionally.
+          // This isn't optimal, but way better than using a selector in a react-table cell, which makes them not pure and rerenders all over the place
+          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards,
+        }
+      }),
+    [validatorsData, assetId, stakingDataByValidator, validatorIds],
   )
 
   const { cosmosGetStarted, cosmosStaking } = useModal()
@@ -103,7 +124,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
   const handleStakedClick = (values: Row<ActiveStakingOpportunity>) => {
     cosmosStaking.open({
       assetId,
-      validatorAddress: values.original.validatorId,
+      validatorAddress: values.original.address,
     })
   }
 
@@ -149,20 +170,12 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         isNumeric: true,
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validator = row.original
+          const { totalDelegations } = row.original
 
-          const totalBondings = useAppSelector(state =>
-            selectTotalBondingsBalanceByAssetId(
-              state,
-              accountSpecifier,
-              row.original.validatorId,
-              asset.caip19,
-            ),
-          )
-
-          return Boolean(Object.keys(validator).length) ? (
+          // TODO: Proper loading state
+          return Boolean(true) ? (
             <Amount.Crypto
-              value={bnOrZero(totalBondings)
+              value={bnOrZero(totalDelegations)
                 .div(`1e+${asset.precision}`)
                 .decimalPlaces(asset.precision)
                 .toString()}
@@ -178,16 +191,14 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
       },
       {
         Header: <Text translation='defi.rewards' />,
-        id: 'rewards',
+        accessor: 'rewards',
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validator = row.original
-          if (!Object.keys(validator).length) return null
-          const rewards = useAppSelector(state =>
-            selectRewardsByValidator(state, accountSpecifier, validator.address),
-          )
+          const validatorRewards = row.original?.rewards[0]
+          const rewards = validatorRewards?.amount ?? '0'
+          if (!Object.keys(validatorRewards).length) return null
 
-          return Boolean(Object.keys(validator)) ? (
+          return Boolean(Object.keys(validatorRewards)) ? (
             <HStack fontWeight={'normal'}>
               <Amount.Crypto
                 value={bnOrZero(rewards)

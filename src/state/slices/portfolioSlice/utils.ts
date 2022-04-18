@@ -319,8 +319,8 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         portfolio.accounts.byId[accountSpecifier].validatorIds = uniqueValidatorAddresses
         portfolio.accounts.byId[accountSpecifier].stakingDataByValidatorId = {}
 
-        console.log('one call')
         // TODO: Make it its own util?
+        // Breaks typings in all sort of ways and dumb time complexity, refactor it
         uniqueValidatorAddresses.forEach(validatorAddress => {
           const validatorRewards = stakingData.rewards.find(
             validatorRewards => validatorRewards.validator.address === validatorAddress,
