@@ -101,8 +101,8 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
         const chainAccountSpecifiers = getAccountSpecifiersByChainId(chainId)
         if (isEmpty(chainAccountSpecifiers)) continue
         chainAccountSpecifiers.forEach(accountSpecifierMap => {
-          if (accountSpecifierMap['cosmos:cosmoshub-4']) {
-            const cosmosAccountSpecifier = accountSpecifierMap['cosmos:cosmoshub-4']
+          if (accountSpecifierMap[cosmosChainId]) {
+            const cosmosAccountSpecifier = accountSpecifierMap[cosmosChainId]
             const cosmosPortfolioAccount =
               portfolioAccounts[`${cosmosChainId}:${cosmosAccountSpecifier}`]
             if (cosmosPortfolioAccount) {
