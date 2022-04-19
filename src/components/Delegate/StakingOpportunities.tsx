@@ -147,7 +147,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
           const { totalDelegations } = row.original
 
           // TODO: Proper loading state
-          return Boolean(hasActiveStaking) ? (
+          return bnOrZero(totalDelegations).gt(0) ? (
             <Amount.Crypto
               value={bnOrZero(totalDelegations)
                 .div(`1e+${asset.precision}`)
@@ -170,9 +170,8 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         Cell: ({ row }: { row: { original: any } }) => {
           const validatorRewards = row.original?.rewards
           const rewards = validatorRewards?.amount ?? '0'
-          if (!Object.keys(validatorRewards).length) return null
 
-          return Boolean(hasActiveStaking) ? (
+          return Boolean(bnOrZero(rewards).gt(0)) ? (
             <HStack fontWeight={'normal'}>
               <Amount.Crypto
                 value={bnOrZero(rewards)

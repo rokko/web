@@ -3,7 +3,7 @@ import { utxoAccountParams } from '@shapeshiftoss/chain-adapters'
 import isEmpty from 'lodash/isEmpty'
 import React, { useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useChainAdapters } from 'context/PluginProvider/PluginProvider'
+import { usePlugins } from 'context/PluginProvider/PluginProvider'
 import { useWallet } from 'hooks/useWallet/useWallet'
 import { walletSupportChain } from 'hooks/useWalletSupportsChain/useWalletSupportsChain'
 import { AccountSpecifierMap } from 'state/slices/accountSpecifiersSlice/accountSpecifiersSlice'
@@ -32,7 +32,7 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
   const {
     state: { wallet, walletInfo },
   } = useWallet()
-  const chainAdapter = useChainAdapters()
+  const { chainAdapterManager, supportedChains } = usePlugins()
   const assets = useSelector(selectAssets)
   const portfolioAssetIds = useSelector(selectPortfolioAssetIds)
   const accountSpecifiers = useSelector(selectAccountSpecifiers)
@@ -54,10 +54,9 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
   useEffect(() => {
     if (!wallet) return
     if (isEmpty(assets)) return
-    const supportedChains = chainAdapter.getSupportedChains()
     ;(async () => {
       for (const chain of supportedChains) {
-        const adapter = chainAdapter.byChain(chain)
+        const adapter = chainAdapterManager.byChain(chain)
         const chainId = adapter.getCaip2()
         if (!walletSupportChain({ chainId, wallet })) continue
 
@@ -147,7 +146,7 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
       dispatch(txHistory.actions.clear())
       supportedChains.forEach(chain => {
         try {
-          const adapter = chainAdapter.byChain(chain)
+          const adapter = chainAdapterManager.byChain(chain)
           adapter.unsubscribeTxs()
         } catch (e) {
           console.error('TransactionsProvider: Error unsubscribing from transaction history', e)
@@ -159,7 +158,8 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
     dispatch,
     walletInfo?.deviceId,
     wallet,
-    chainAdapter,
+    chainAdapterManager,
+    supportedChains,
     accountSpecifiers,
     getAccountSpecifiersByChainId,
     portfolioAssetIds,

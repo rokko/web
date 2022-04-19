@@ -17,7 +17,7 @@ import head from 'lodash/head'
 import isEmpty from 'lodash/isEmpty'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useChainAdapters } from 'context/PluginProvider/PluginProvider'
+import { usePlugins } from 'context/PluginProvider/PluginProvider'
 import { useWallet } from 'hooks/useWallet/useWallet'
 import {
   AccountSpecifierMap,
@@ -55,7 +55,7 @@ import { useAppSelector } from 'state/store'
  */
 export const PortfolioProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch()
-  const chainAdapter = useChainAdapters()
+  const { chainAdapterManager, supportedChains } = usePlugins()
   const {
     state: { wallet },
   } = useWallet()
@@ -108,11 +108,10 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
     if (isEmpty(assetsById)) return
     ;(async () => {
       try {
-        const supportedChains = chainAdapter.getSupportedChains()
         const acc: AccountSpecifierMap[] = []
 
         for (const chain of supportedChains) {
-          const adapter = chainAdapter.byChain(chain)
+          const adapter = chainAdapterManager.byChain(chain)
 
           switch (chain) {
             // TODO: Handle Cosmos ChainType here
@@ -183,7 +182,7 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
         console.error('useAccountSpecifiers:getAccountSpecifiers:Error', e)
       }
     })()
-  }, [assetsById, chainAdapter, dispatch, wallet])
+  }, [assetsById, chainAdapterManager, dispatch, wallet, supportedChains])
 
   const txIds = useSelector(selectTxIds)
   const txsById = useSelector(selectTxs)
