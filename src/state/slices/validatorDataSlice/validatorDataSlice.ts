@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { CAIP2 } from '@shapeshiftoss/caip'
-import { CosmosSdkBaseAdapter } from '@shapeshiftoss/chain-adapters/dist/cosmossdk/CosmosSdkBaseAdapter'
-import { chainAdapters, ChainTypes } from '@shapeshiftoss/types'
+import { chainAdapters } from '@shapeshiftoss/types'
 import { getChainAdapters } from 'context/PluginProvider/PluginProvider'
+
+import { cosmosChainId } from '../portfolioSlice/utils'
 
 export type PubKey = string
 
-type SingleValidatorDataArgs = { chainId: CAIP2; validatorAddress: PubKey }
+type SingleValidatorDataArgs = { validatorAddress: PubKey }
 
 export type Status = 'idle' | 'loading' | 'loaded'
 
@@ -72,11 +72,9 @@ export const validatorDataApi = createApi({
   refetchOnReconnect: true,
   endpoints: build => ({
     getValidatorData: build.query<chainAdapters.cosmos.Validator, SingleValidatorDataArgs>({
-      queryFn: async ({ chainId, validatorAddress }, { dispatch }) => {
+      queryFn: async ({ validatorAddress }, { dispatch }) => {
         const chainAdapters = getChainAdapters()
-        const adapter = (await chainAdapters.byChainId(
-          chainId,
-        )) as CosmosSdkBaseAdapter<ChainTypes.Cosmos>
+        const adapter = await chainAdapters.byChainId(cosmosChainId)
         dispatch(validatorData.actions.setValidatorStatus('loading'))
         try {
           const data = await adapter.getValidator(validatorAddress)

@@ -112,7 +112,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
           const validator = row.original
 
           return (
-            <Skeleton isLoaded={Boolean(Object.keys(validator).length)}>
+            <Skeleton isLoaded={validator.isLoaded}>
               <ValidatorName
                 validatorAddress={validator?.address || ''}
                 moniker={validator?.moniker || ''}
@@ -131,7 +131,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
           const validator = row.original
 
           return (
-            <Skeleton isLoaded={Boolean(Object.keys(validator).length)}>
+            <Skeleton isLoaded={validator.isLoaded}>
               <AprTag percentage={validator?.apr} showAprSuffix />
             </Skeleton>
           )
@@ -144,21 +144,25 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         isNumeric: true,
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const { totalDelegations } = row.original
+          const { isLoaded, totalDelegations } = row.original
 
           // TODO: Proper loading state
-          return bnOrZero(totalDelegations).gt(0) ? (
-            <Amount.Crypto
-              value={bnOrZero(totalDelegations)
-                .div(`1e+${asset.precision}`)
-                .decimalPlaces(asset.precision)
-                .toString()}
-              symbol={asset.symbol}
-              color='white'
-              fontWeight={'normal'}
-            />
-          ) : (
-            <Box minWidth={{ base: '0px', md: '200px' }} />
+          return (
+            <Skeleton isLoaded={isLoaded}>
+              {bnOrZero(totalDelegations).gt(0) ? (
+                <Amount.Crypto
+                  value={bnOrZero(totalDelegations)
+                    .div(`1e+${asset.precision}`)
+                    .decimalPlaces(asset.precision)
+                    .toString()}
+                  symbol={asset.symbol}
+                  color='white'
+                  fontWeight={'normal'}
+                />
+              ) : (
+                <Box minWidth={{ base: '0px', md: '200px' }} />
+              )}
+            </Skeleton>
           )
         },
         disableSortBy: true,
@@ -168,40 +172,44 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         accessor: 'rewards',
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
-          const validatorRewards = row.original?.rewards
+          const { rewards: validatorRewards, isLoaded } = row.original
           const rewards = validatorRewards?.amount ?? '0'
 
-          return Boolean(bnOrZero(rewards).gt(0)) ? (
-            <HStack fontWeight={'normal'}>
-              <Amount.Crypto
-                value={bnOrZero(rewards)
-                  .div(`1e+${asset.precision}`)
-                  .decimalPlaces(asset.precision)
-                  .toString()}
-                symbol={asset.symbol}
-              />
-              <Amount.Fiat
-                value={bnOrZero(rewards)
-                  .div(`1e+${asset.precision}`)
-                  .times(bnOrZero(marketData.price))
-                  .toPrecision()}
-                color='green.500'
-                prefix='≈'
-              />
-            </HStack>
-          ) : (
-            <Box width='100%' textAlign={'right'}>
-              <Button
-                onClick={handleGetStartedClick}
-                as='span'
-                colorScheme='blue'
-                variant='ghost-filled'
-                size='sm'
-                cursor='pointer'
-              >
-                <Text translation='common.getStarted' />
-              </Button>
-            </Box>
+          return (
+            <Skeleton isLoaded={isLoaded}>
+              {bnOrZero(rewards).gt(0) ? (
+                <HStack fontWeight={'normal'}>
+                  <Amount.Crypto
+                    value={bnOrZero(rewards)
+                      .div(`1e+${asset.precision}`)
+                      .decimalPlaces(asset.precision)
+                      .toString()}
+                    symbol={asset.symbol}
+                  />
+                  <Amount.Fiat
+                    value={bnOrZero(rewards)
+                      .div(`1e+${asset.precision}`)
+                      .times(bnOrZero(marketData.price))
+                      .toPrecision()}
+                    color='green.500'
+                    prefix='≈'
+                  />
+                </HStack>
+              ) : (
+                <Box width='100%' textAlign={'right'}>
+                  <Button
+                    onClick={handleGetStartedClick}
+                    as='span'
+                    colorScheme='blue'
+                    variant='ghost-filled'
+                    size='sm'
+                    cursor='pointer'
+                  >
+                    <Text translation='common.getStarted' />
+                  </Button>
+                </Box>
+              )}
+            </Skeleton>
           )
         },
         disableSortBy: true,

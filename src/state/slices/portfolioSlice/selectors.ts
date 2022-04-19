@@ -890,6 +890,7 @@ export const selectStakingOpportunitiesDataFull = createSelector(
         totalDelegations,
         // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
         rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards?.[0] ?? '0',
+        isLoaded: Boolean(validatorsData[validatorId]),
       }
     }),
 )
