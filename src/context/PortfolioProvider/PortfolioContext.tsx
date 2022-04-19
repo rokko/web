@@ -227,22 +227,17 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
     if (!tx) return
 
     if (tx.caip2 === cosmosChainId) {
-      // TODO: this probably shouldn't belong here, otherwise it will only work after first websocket Tx
-      // Is there a better place to move this in so we can load validators right after portfolio accounts are available?
-      const validators =
-        // TODO: That's a hacky hack during dev, remove me obviously - not a clean nor reliable way to get accountSpecifier
-        portfolioAccounts[`cosmos:cosmoshub-4:${tx.address}`]?.validatorIds
-      validators?.length &&
-        validators.forEach(validatorAddress => {
-          // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
-          dispatch(
-            validatorDataApi.endpoints.getValidatorData.initiate({
-              // TODO: Make me programmatic
-              chainId: 'cosmos:cosmoshub-4',
-              validatorAddress,
-            }),
-          )
-        })
+      // This block refetches validator data on subsequent Txs in case TVL or APR changed.
+      const validators = portfolioAccounts[`${cosmosChainId}:${tx.address}`]?.validatorIds
+      validators?.forEach(validatorAddress => {
+        // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
+        dispatch(
+          validatorDataApi.endpoints.getValidatorData.initiate({
+            chainId: cosmosChainId,
+            validatorAddress,
+          }),
+        )
+      })
       // cosmos txs only come in when they're confirmed, so refetch that account immediately
       return refetchAccountByTxId(txId)
     } else {

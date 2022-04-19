@@ -103,21 +103,17 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
           if (accountSpecifierMap['cosmos:cosmoshub-4']) {
             const cosmosAccountSpecifier = accountSpecifierMap['cosmos:cosmoshub-4']
             const cosmosPortfolioAccount =
-              portfolioAccounts[`cosmos:cosmoshub-4:${cosmosAccountSpecifier}`]
+              portfolioAccounts[`${cosmosChainId}:${cosmosAccountSpecifier}`]
             if (cosmosPortfolioAccount) {
-              const validators = cosmosPortfolioAccount.validatorIds
-
-              validators?.length &&
-                validators.forEach(validatorAddress => {
-                  // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
-                  dispatch(
-                    validatorDataApi.endpoints.getValidatorData.initiate({
-                      // TODO: Make me programmatic
-                      chainId: 'cosmos:cosmoshub-4',
-                      validatorAddress,
-                    }),
-                  )
-                })
+              cosmosPortfolioAccount.validatorIds?.forEach(validatorAddress => {
+                // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
+                dispatch(
+                  validatorDataApi.endpoints.getValidatorData.initiate({
+                    chainId: cosmosChainId,
+                    validatorAddress,
+                  }),
+                )
+              })
             }
           }
           const { getAllTxHistory, getFoxyRebaseHistoryByAccountId } = txHistoryApi.endpoints

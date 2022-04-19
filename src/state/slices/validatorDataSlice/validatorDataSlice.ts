@@ -65,6 +65,9 @@ export const validatorDataApi = createApi({
   reducerPath: 'validatorDataApi',
   // not actually used, only used to satisfy createApi, we use a custom queryFn
   baseQuery: fetchBaseQuery({ baseUrl: '/' }),
+  // 5 minutes caching against overfetching. The only thing that can change on new Tx is effectively TVL and APR
+  // The first won't noticeably change given the Million fiat precision we use, and the former effectively won't noticeably change either in such timeframe
+  keepUnusedDataFor: 300,
   // refetch if network connection is dropped, useful for mobile
   refetchOnReconnect: true,
   endpoints: build => ({
