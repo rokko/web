@@ -3,7 +3,6 @@ import { HDWallet, Keyring } from '@shapeshiftoss/hdwallet-core'
 import { MetaMaskHDWallet } from '@shapeshiftoss/hdwallet-metamask'
 import * as native from '@shapeshiftoss/hdwallet-native'
 import { NativeHDWallet } from '@shapeshiftoss/hdwallet-native'
-import { Vault } from '@shapeshiftoss/hdwallet-native-vault'
 import { PortisHDWallet } from '@shapeshiftoss/hdwallet-portis'
 import { getConfig } from 'config'
 import { PublicWalletXpubs } from 'constants/PublicWalletXpubs'
@@ -363,28 +362,14 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }): JSX
 
   const connectDemo = useCallback(async () => {
     dispatch({ type: WalletActions.SET_LOCAL_WALLET_LOADING, payload: true })
-    // Import wallet
-    const vault = await Vault.create(undefined, false)
-    vault.meta.set('createdAt', Date.now())
-    const { create: createMnemonic } = native.crypto.Isolation.Engines.Dummy.BIP39.Mnemonic
-    const dummyMnemonic = await createMnemonic(PublicWalletXpubs)
-    vault.set('#mnemonic', String(dummyMnemonic)) // TODO Why do we have to cast this to String?
-    vault.seal()
-    await vault.setPassword('12345678') // TODO - Demo wallet password?
     const walletLabel = 'DemoWallet' // TODO - Demo wallet name?
-    vault.meta.set('name', walletLabel)
-
-    // Load wallet
-    const deviceId = vault.id
+    const deviceId = 'demo'
     const adapter = SUPPORTED_WALLETS[KeyManager.Native].adapter.useKeyring(state.keyring)
     const wallet = (await adapter.pairDevice(deviceId)) as NativeHDWallet
-    // Why do we have to load this from the vault when we already have it in scope above?
-    // If we don't, then we get a 'Private key not available' error
-    const mnemonic = (await vault.get('#mnemonic')) as native.crypto.Isolation.Core.BIP39.Mnemonic
-    mnemonic.addRevoker?.(() => vault.revoke())
+    const { create } = native.crypto.Isolation.Engines.Dummy.BIP39.Mnemonic
+    const mnemonic = await create(PublicWalletXpubs)
     await wallet.loadDevice({ mnemonic, deviceId })
-
-    // Dispatch actions
+    await wallet.initialize()
     dispatch({ type: WalletActions.SET_IS_DEMO_WALLET, payload: true })
     dispatch({
       type: WalletActions.SET_WALLET,
