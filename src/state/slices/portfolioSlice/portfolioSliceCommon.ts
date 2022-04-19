@@ -42,7 +42,7 @@ export type Staking = {
   rewards: chainAdapters.cosmos.ValidatorReward[]
 }
 
-type PortfolioAccount = {
+export type PortfolioAccount = {
   // asset ids belonging to an account
   assetIds: CAIP19[]
   stakingData?: Staking
@@ -50,8 +50,7 @@ type PortfolioAccount = {
   // The staking data for per validator, so we can do a join from validatorDataSlice
   stakingDataByValidatorId?: Record<PubKey, StakingDataParsedByAccountSpecifier>
 }
-type StakingDataParsed = any
-type StakingDataParsedByAccountSpecifier = Record<string, StakingDataParsed>
+type StakingDataParsedByAccountSpecifier = Record<string, Staking>
 
 export type PortfolioAccounts = {
   byId: {

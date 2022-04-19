@@ -834,30 +834,19 @@ export const selectRewardsByAccountSpecifier = createDeepEqualOutputSelector(
   },
 )
 
-// TODO: Since we now have clean, almost fully parsed data by validator in the slice, remove me and use it instead
 export const selectRewardsByValidator = createDeepEqualOutputSelector(
   selectPortfolioAccounts,
   selectValidatorAddress,
   selectAccountSpecifierParamArityFour,
-  (allPortfolioAccounts, validatorAddress, accountSpecifier): string => {
-    // TODO: account specifier here
+  selectAssetIdParamArityFour,
+  (allPortfolioAccounts, validatorAddress, accountSpecifier, assetId): string => {
     const cosmosAccount = allPortfolioAccounts?.[accountSpecifier]
 
-    if (!cosmosAccount?.stakingData?.rewards) return '0'
+    const rewards =
+      cosmosAccount.stakingDataByValidatorId?.[validatorAddress]?.[assetId]?.rewards?.[0]?.amount ??
+      '0'
 
-    const rewards = cosmosAccount.stakingData.rewards?.find(
-      rewardEntry => rewardEntry.validator.address === validatorAddress,
-    )
-
-    if (!rewards?.rewards.length) return '0'
-
-    return rewards.rewards
-      .reduce((acc, current) => {
-        acc = acc.plus(current.amount)
-
-        return acc
-      }, bnOrZero(0))
-      .toString()
+    return rewards
   },
 )
 

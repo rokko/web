@@ -46,7 +46,7 @@ export const Overview: React.FC<StakedProps> = ({
   )
 
   const rewardsAmount = useAppSelector(state =>
-    selectRewardsByValidator(state, accountSpecifier, validatorAddress),
+    selectRewardsByValidator(state, accountSpecifier, validatorAddress, assetId),
   )
 
   // If it's loading, it will display the skeleton,

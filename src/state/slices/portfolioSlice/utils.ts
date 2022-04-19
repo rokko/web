@@ -15,7 +15,11 @@ import toLower from 'lodash/toLower'
 import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 
 import { AccountSpecifier } from '../accountSpecifiersSlice/accountSpecifiersSlice'
-import { initialState, Portfolio } from './portfolioSliceCommon'
+import {
+  initialState,
+  Portfolio,
+  PortfolioAccounts as PortfolioSliceAccounts,
+} from './portfolioSliceCommon'
 
 export type UtxoParamsAndAccountType = {
   utxoParams: { scriptType: BTCInputScriptType; bip44Params: BIP44Params }
@@ -121,13 +125,7 @@ export const accountIdToUtxoParams = (
 }
 
 export const findAccountsByAssetId = (
-  portfolioAccounts: {
-    [k: string]: {
-      assetIds: string[]
-      // TODO: this is wrong
-      stakingDataByAccountSpecifier?: any
-    }
-  },
+  portfolioAccounts: PortfolioSliceAccounts['byId'],
   assetId: CAIP19,
 ): AccountSpecifier[] => {
   const result = Object.entries(portfolioAccounts).reduce<AccountSpecifier[]>(
