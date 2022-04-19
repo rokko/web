@@ -8,6 +8,7 @@ import {
   selectAllStakingDataByValidator,
   selectAssetByCAIP19,
   selectMarketDataById,
+  selectStakingOpportunitiesDataFull,
   selectValidatorIds,
 } from 'state/slices/selectors'
 import {
@@ -52,45 +53,15 @@ export function useCosmosStakingBalances({
 
   const accountSpecifiers = useAppSelector(state => selectAccountSpecifier(state, asset?.caip2))
   const accountSpecifier = accountSpecifiers?.[0] // TODO: maybe remove me, or maybe not
-  const validatorIds = useAppSelector(state => selectValidatorIds(state, accountSpecifier))
-  const stakingDataByValidator = useAppSelector(state =>
-    selectAllStakingDataByValidator(state, accountSpecifier),
-  )
-  const validatorsData = useAppSelector(state => selectAllValidatorsData(state))
 
-  const stakingOpportunities = useMemo(
-    () =>
-      validatorIds.map(validatorId => {
-        const delegatedAmount = bnOrZero(
-          stakingDataByValidator?.[validatorId]?.[assetId]?.delegations?.[0]?.amount,
-        ).toString()
-        const undelegatedEntries =
-          stakingDataByValidator?.[validatorId]?.[assetId]?.undelegations ?? []
-        const totalDelegations = bnOrZero(delegatedAmount)
-          .plus(
-            undelegatedEntries.reduce((acc, current) => {
-              return acc.plus(bnOrZero(current.amount))
-            }, bnOrZero(0)),
-          )
-          .toString()
-        return {
-          ...validatorsData[validatorId],
-          // Delegated/Redelegated + Undelegation
-          // TODO: Optimize this. This can't be a selector since we're iterating and selectors can't be used conditionally.
-          // This isn't optimal, but way better than using a selector in a react-table cell, which makes them not pure and rerenders all over the place
-          cryptoAmount: totalDelegations,
-          // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
-          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards[0],
-        }
-      }),
-    [assetId, stakingDataByValidator, validatorIds, validatorsData],
+  const stakingOpportunities = useAppSelector(state =>
+    selectStakingOpportunitiesDataFull(state, accountSpecifier, '', assetId),
   )
-
   const chainId = asset.caip2
 
   const mergedActiveStakingOpportunities = useMemo(() => {
     return Object.values(stakingOpportunities).map(opportunity => {
-      const fiatAmount = bnOrZero(opportunity.cryptoAmount)
+      const fiatAmount = bnOrZero(opportunity.totalDelegations)
         .div(`1e+${asset.precision}`)
         .times(bnOrZero(marketData.price))
         .toFixed(2)
@@ -102,7 +73,7 @@ export function useCosmosStakingBalances({
 
       const data = {
         ...opportunity,
-        cryptoAmount: bnOrZero(opportunity.cryptoAmount)
+        cryptoAmount: bnOrZero(opportunity.totalDelegations)
           .div(`1e+${asset?.precision}`)
           .decimalPlaces(asset.precision)
           .toString(),

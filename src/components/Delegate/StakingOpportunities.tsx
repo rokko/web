@@ -24,6 +24,7 @@ import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
   ActiveStakingOpportunity,
   selectAllStakingDataByValidator,
+  selectStakingOpportunitiesDataFull,
   selectValidatorIds,
 } from 'state/slices/portfolioSlice/selectors'
 import {
@@ -76,39 +77,10 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
   const accountSpecifiers = useAppSelector(state => selectAccountSpecifier(state, asset?.caip2))
   const accountSpecifier = accountSpecifiers?.[0]
 
-  const validatorsData = useAppSelector(state => selectAllValidatorsData(state))
-  const stakingDataByValidator = useAppSelector(state =>
-    selectAllStakingDataByValidator(state, accountSpecifier),
+  const stakingOpportunitiesData = useAppSelector(state =>
+    selectStakingOpportunitiesDataFull(state, accountSpecifier, '', assetId),
   )
-  const validatorIds = useAppSelector(state => selectValidatorIds(state, accountSpecifier))
-
-  const rows = useMemo(
-    () =>
-      validatorIds.map(validatorId => {
-        const delegatedAmount = bnOrZero(
-          stakingDataByValidator?.[validatorId]?.[assetId]?.delegations?.[0]?.amount,
-        ).toString()
-        const undelegatedEntries =
-          stakingDataByValidator?.[validatorId]?.[assetId]?.undelegations ?? []
-        const totalDelegations = bnOrZero(delegatedAmount)
-          .plus(
-            undelegatedEntries.reduce((acc, current) => {
-              return acc.plus(bnOrZero(current.amount))
-            }, bnOrZero(0)),
-          )
-          .toString()
-        return {
-          ...validatorsData[validatorId],
-          // Delegated/Redelegated + Undelegation
-          // TODO: Optimize this. This can't be a selector since we're iterating and selectors can't be used conditionally.
-          // This isn't optimal, but way better than using a selector in a react-table cell, which makes them not pure and rerenders all over the place
-          totalDelegations,
-          // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
-          rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards?.[0] ?? '0',
-        }
-      }),
-    [validatorsData, assetId, stakingDataByValidator, validatorIds],
-  )
+  const rows = stakingOpportunitiesData
 
   const { cosmosGetStarted, cosmosStaking } = useModal()
 

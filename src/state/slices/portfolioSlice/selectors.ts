@@ -15,6 +15,7 @@ import { accountIdToFeeAssetId } from 'state/slices/portfolioSlice/utils'
 import { selectBalanceThreshold } from 'state/slices/preferencesSlice/selectors'
 
 import { AccountSpecifier } from '../accountSpecifiersSlice/accountSpecifiersSlice'
+import { selectAllValidatorsData } from '../validatorDataSlice/selectors'
 import { PubKey } from '../validatorDataSlice/validatorDataSlice'
 import {
   PortfolioAccountBalances,
@@ -856,4 +857,33 @@ export const selectValidatorIds = createSelector(
   (portfolioAccounts, accountSpecifier) => {
     return portfolioAccounts?.[accountSpecifier]?.validatorIds ?? []
   },
+)
+
+export const selectStakingOpportunitiesDataFull = createSelector(
+  selectValidatorIds,
+  selectAllValidatorsData,
+  selectAllStakingDataByValidator,
+  selectAssetIdParamArityFour,
+  (validatorIds, validatorsData, stakingDataByValidator, assetId) =>
+    validatorIds.map(validatorId => {
+      const delegatedAmount = bnOrZero(
+        stakingDataByValidator?.[validatorId]?.[assetId]?.delegations?.[0]?.amount,
+      ).toString()
+      const undelegatedEntries =
+        stakingDataByValidator?.[validatorId]?.[assetId]?.undelegations ?? []
+      const totalDelegations = bnOrZero(delegatedAmount)
+        .plus(
+          undelegatedEntries.reduce((acc, current) => {
+            return acc.plus(bnOrZero(current.amount))
+          }, bnOrZero(0)),
+        )
+        .toString()
+      return {
+        ...validatorsData[validatorId],
+        // Delegated/Redelegated + Undelegation
+        totalDelegations,
+        // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
+        rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards?.[0] ?? '0',
+      }
+    }),
 )
