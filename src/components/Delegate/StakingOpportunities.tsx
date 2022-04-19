@@ -42,7 +42,6 @@ type ValidatorNameProps = {
 }
 
 export const ValidatorName = ({ moniker, isStaking, validatorAddress }: ValidatorNameProps) => {
-  const isLoaded = true
   const assetIcon = isStaking
     ? `https://raw.githubusercontent.com/cosmostation/cosmostation_token_resource/master/moniker/cosmoshub/${validatorAddress}.png`
     : 'https://assets.coincap.io/assets/icons/256/atom.png'
@@ -50,17 +49,14 @@ export const ValidatorName = ({ moniker, isStaking, validatorAddress }: Validato
   return (
     <Box cursor='pointer'>
       <Flex alignItems='center' maxWidth='180px' mr={'-20px'}>
-        <SkeletonCircle boxSize='8' isLoaded={isLoaded} mr={4}>
-          <AssetIcon src={assetIcon} boxSize='8' />
-        </SkeletonCircle>
-        <Skeleton isLoaded={isLoaded} cursor='pointer'>
-          {isStaking && (
-            <Tag colorScheme='blue'>
-              <TagLabel>{moniker}</TagLabel>
-            </Tag>
-          )}
-          {!isStaking && <RawText fontWeight='bold'>{`${moniker}`}</RawText>}
-        </Skeleton>
+        <AssetIcon src={assetIcon} boxSize='8' />
+        {isStaking ? (
+          <Tag colorScheme='blue'>
+            <TagLabel>{moniker}</TagLabel>
+          </Tag>
+        ) : (
+          <RawText fontWeight='bold'>{`${moniker}`}</RawText>
+        )}
       </Flex>
     </Box>
   )
