@@ -9,6 +9,7 @@ import {
   UtxoAccountType,
 } from '@shapeshiftoss/types'
 import cloneDeep from 'lodash/cloneDeep'
+import get from 'lodash/get'
 import groupBy from 'lodash/groupBy'
 import last from 'lodash/last'
 import toLower from 'lodash/toLower'
@@ -278,17 +279,6 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         portfolio.accountBalances.ids.push(accountSpecifier)
         portfolio.accountSpecifiers.ids.push(accountSpecifier)
 
-        const {
-          chainSpecific: { delegations, redelegations, undelegations, rewards },
-        } = account as chainAdapters.Account<ChainTypes.Cosmos>
-
-        const stakingData = {
-          delegations,
-          redelegations,
-          undelegations,
-          rewards,
-        }
-
         portfolio.accounts.byId[accountSpecifier] = {
           assetIds: [],
           stakingData: {
@@ -296,20 +286,24 @@ export const accountToPortfolio: AccountToPortfolio = args => {
             undelegations: [],
             redelegations: [],
             rewards: [],
+            ...(account.chainSpecific || {}),
           },
           validatorIds: [],
           stakingDataByValidatorId: {},
         }
 
         portfolio.accounts.byId[accountSpecifier].assetIds.push(caip19)
-        portfolio.accounts.byId[accountSpecifier].stakingData = stakingData
         // TODO: refactor this before review
         const uniqueValidatorAddresses = Array.from(
           new Set(
             [
-              stakingData.delegations.map(delegation => delegation.validator.address),
-              stakingData.undelegations.map(undelegation => undelegation.validator.address),
-              stakingData.rewards.map(reward => reward.validator.address),
+              get(account, 'chainSpecific.delegations').map(
+                delegation => delegation.validator.address,
+              ),
+              get(account, 'chainSpecific.undelegations').map(
+                undelegation => undelegation.validator.address,
+              ),
+              get(account, 'chainSpecific.rewards').map(reward => reward.validator.address),
             ].flat(),
           ),
         )
@@ -320,16 +314,16 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         // TODO: Make it its own util?
         // Breaks typings in all sort of ways and dumb time complexity, refactor it
         uniqueValidatorAddresses.forEach(validatorAddress => {
-          const validatorRewards = stakingData.rewards.find(
+          const validatorRewards = get(account, 'chainSpecific.rewards').find(
             validatorRewards => validatorRewards.validator.address === validatorAddress,
           )
           const rewards = groupBy(validatorRewards?.rewards, rewardEntry => rewardEntry.assetId)
           // TODO: Do we need this? There might only be one entry per validator address actually
-          const delegationEntries = stakingData.delegations.filter(
+          const delegationEntries = get(account, 'chainSpecific.delegations').filter(
             delegation => delegation.validator.address === validatorAddress,
           )
           // TODO: Do we need this? There might only be one entry per validator address actually
-          const undelegationEntries = stakingData.undelegations.find(
+          const undelegationEntries = get(account, 'chainSpecific.undelegations').find(
             undelegation => undelegation.validator.address === validatorAddress,
           )
           const delegations = groupBy(delegationEntries, delegationEntry => delegationEntry.assetId)
