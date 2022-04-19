@@ -1,23 +1,15 @@
 import { CAIP19 } from '@shapeshiftoss/caip'
 import { chainAdapters, ChainTypes } from '@shapeshiftoss/types'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { BigNumber, bnOrZero } from 'lib/bignumber/bignumber'
 import {
   ActiveStakingOpportunity,
   selectAccountSpecifier,
-  selectAllStakingDataByValidator,
   selectAssetByCAIP19,
   selectMarketDataById,
   selectStakingOpportunitiesDataFull,
-  selectValidatorIds,
 } from 'state/slices/selectors'
-import {
-  selectAllValidatorsData,
-  selectSingleValidator,
-} from 'state/slices/validatorDataSlice/selectors'
-import { useAppDispatch, useAppSelector } from 'state/store'
-
-const SHAPESHIFT_VALIDATOR_ADDRESS = 'cosmosvaloper199mlc7fr6ll5t54w7tts7f4s0cvnqgc59nmuxf'
+import { useAppSelector } from 'state/store'
 
 type UseCosmosStakingBalancesProps = {
   assetId: CAIP19
@@ -49,7 +41,6 @@ export function useCosmosStakingBalances({
 }: UseCosmosStakingBalancesProps): UseCosmosStakingBalancesReturn {
   const marketData = useAppSelector(state => selectMarketDataById(state, assetId))
   const asset = useAppSelector(state => selectAssetByCAIP19(state, assetId))
-  const dispatch = useAppDispatch()
 
   const accountSpecifiers = useAppSelector(state => selectAccountSpecifier(state, asset?.caip2))
   const accountSpecifier = accountSpecifiers?.[0] // TODO: maybe remove me, or maybe not
@@ -57,8 +48,11 @@ export function useCosmosStakingBalances({
   const stakingOpportunities = useAppSelector(state =>
     selectStakingOpportunitiesDataFull(state, accountSpecifier, '', assetId),
   )
-  const chainId = asset.caip2
-
+  // TODO: This whole module probably goes away as well
+  // We just parse total delegation in fiat, tvl in fiat, and parse cryptoAmount to precision - this should be done at component-level and not require a whole hook
+  // We also shoehorn chain, assetId, and tokenAddress - all of which can also be shoehorned at component-level
+  // Finally, we have a totalBalance - this can be added at selector-level
+  // The loading state is not needed anymore
   const mergedActiveStakingOpportunities = useMemo(() => {
     return Object.values(stakingOpportunities).map(opportunity => {
       const fiatAmount = bnOrZero(opportunity.totalDelegations)
@@ -97,14 +91,6 @@ export function useCosmosStakingBalances({
       ),
     [mergedActiveStakingOpportunities],
   )
-
-  console.log({ mergedActiveStakingOpportunities })
-
-  useEffect(() => {
-    ;(async () => {
-      // if (!isValidatorDataLoaded) return // TODO: Used to be like this, this probably goes away: use select() or similar to detect loaded/ing state
-    })()
-  }, [dispatch, chainId])
 
   return {
     stakingOpportunities: mergedActiveStakingOpportunities,
