@@ -4,9 +4,12 @@ import { useMemo } from 'react'
 import { useWallet } from 'hooks/useWallet/useWallet'
 import { useWalletSupportsChain } from 'hooks/useWalletSupportsChain/useWalletSupportsChain'
 import { AccountSpecifier } from 'state/slices/accountSpecifiersSlice/accountSpecifiersSlice'
-import { selectAccountIdsByAssetId } from 'state/slices/portfolioSlice/selectors'
-import { selectPortfolioCryptoHumanBalanceByFilter } from 'state/slices/portfolioSlice/selectors'
-import { selectAssetByCAIP19, selectMarketDataById } from 'state/slices/selectors'
+import {
+  selectAccountIdsByAssetId,
+  selectAssetByCAIP19,
+  selectMarketDataById,
+  selectPortfolioCryptoHumanBalanceByFilter,
+} from 'state/slices/selectors'
 import { useAppSelector } from 'state/store'
 
 import { AssetActions } from './AssetActions'

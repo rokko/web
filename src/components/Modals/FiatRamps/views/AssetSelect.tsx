@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useHistory, useParams } from 'react-router'
 import { SlideTransition } from 'components/SlideTransition'
 import { Text } from 'components/Text'
-import { selectPortfolioMixedHumanBalancesBySymbol } from 'state/slices/portfolioSlice/selectors'
+import { selectPortfolioMixedHumanBalancesBySymbol } from 'state/slices/selectors'
 import { useAppSelector } from 'state/store'
 
 import { AssetSearch } from '../components/AssetSearch/AssetSearch'

@@ -6,10 +6,11 @@ import { Amount } from 'components/Amount/Amount'
 import { AssetIcon } from 'components/AssetIcon'
 import { RawText } from 'components/Text'
 import {
+  selectAssetByCAIP19,
+  selectMarketDataById,
   selectPortfolioCryptoHumanBalanceByAssetId,
   selectPortfolioFiatBalanceByAssetId,
-} from 'state/slices/portfolioSlice/selectors'
-import { selectAssetByCAIP19, selectMarketDataById } from 'state/slices/selectors'
+} from 'state/slices/selectors'
 import { useAppSelector } from 'state/store'
 
 import { Allocations } from './Allocations'

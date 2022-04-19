@@ -1,6 +1,7 @@
 import { CAIP2 } from '@shapeshiftoss/caip'
 import { utxoAccountParams } from '@shapeshiftoss/chain-adapters'
 import isEmpty from 'lodash/isEmpty'
+import size from 'lodash/size'
 import React, { useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { usePlugins } from 'context/PluginProvider/PluginProvider'
@@ -106,14 +107,12 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
             const cosmosPortfolioAccount =
               portfolioAccounts[`${cosmosChainId}:${cosmosAccountSpecifier}`]
             if (cosmosPortfolioAccount) {
-              const validatorIds = cosmosPortfolioAccount.validatorIds?.length
+              const validatorIds = size(cosmosPortfolioAccount.validatorIds)
                 ? cosmosPortfolioAccount.validatorIds
                 : [SHAPESHIFT_VALIDATOR_ADDRESS]
-              validatorIds.forEach(validatorAddress => {
-                // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
+              validatorIds?.forEach(validatorAddress => {
                 dispatch(
                   validatorDataApi.endpoints.getValidatorData.initiate({
-                    chainId: cosmosChainId,
                     validatorAddress,
                   }),
                 )

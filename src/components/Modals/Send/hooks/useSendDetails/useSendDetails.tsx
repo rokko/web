@@ -11,13 +11,14 @@ import { useWallet } from 'hooks/useWallet/useWallet'
 import { BigNumber, bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { ensLookup } from 'lib/ens'
 import { isEthAddress } from 'lib/utils'
+import { accountIdToUtxoParams } from 'state/slices/portfolioSlice/utils'
 import {
+  selectFeeAssetById,
+  selectMarketDataById,
   selectPortfolioCryptoBalanceByFilter,
   selectPortfolioCryptoHumanBalanceByFilter,
   selectPortfolioFiatBalanceByFilter,
-} from 'state/slices/portfolioSlice/selectors'
-import { accountIdToUtxoParams } from 'state/slices/portfolioSlice/utils'
-import { selectFeeAssetById, selectMarketDataById } from 'state/slices/selectors'
+} from 'state/slices/selectors'
 import { useAppSelector } from 'state/store'
 
 import type { SendInput } from '../../Form'

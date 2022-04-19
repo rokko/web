@@ -10,6 +10,7 @@ import {
   TagLabel,
 } from '@chakra-ui/react'
 import { CAIP19 } from '@shapeshiftoss/caip'
+import size from 'lodash/size'
 import { AprTag } from 'plugins/cosmos/components/AprTag/AprTag'
 import { MouseEvent, useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
@@ -23,12 +24,10 @@ import { useModal } from 'hooks/useModal/useModal'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
   ActiveStakingOpportunity,
-  selectStakingOpportunitiesDataFull,
-} from 'state/slices/portfolioSlice/selectors'
-import {
   selectAccountSpecifier,
   selectAssetByCAIP19,
   selectMarketDataById,
+  selectStakingOpportunitiesDataFull,
 } from 'state/slices/selectors'
 import { useAppSelector } from 'state/store'
 
@@ -80,7 +79,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
 
   const hasActiveStaking =
     // More than one opportunity data means we have more than the default opportunity
-    stakingOpportunitiesData.length > 1 ||
+    size(stakingOpportunitiesData) > 1 ||
     stakingOpportunitiesData.some(
       ({ rewards, totalDelegations }) =>
         bnOrZero(rewards).gt(0) || bnOrZero(totalDelegations).gt(0),

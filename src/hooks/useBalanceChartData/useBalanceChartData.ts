@@ -23,18 +23,18 @@ import { useFetchPriceHistories } from 'hooks/useFetchPriceHistories/useFetchPri
 import { useWallet } from 'hooks/useWallet/useWallet'
 import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { AccountSpecifier } from 'state/slices/accountSpecifiersSlice/accountSpecifiersSlice'
-import { selectAccountSpecifiers } from 'state/slices/accountSpecifiersSlice/selectors'
 import { PriceHistoryData } from 'state/slices/marketDataSlice/marketDataSlice'
 import {
   PortfolioAssets,
   PortfolioBalancesById,
 } from 'state/slices/portfolioSlice/portfolioSliceCommon'
-import { selectTotalStakingDelegationCryptoByAccountSpecifier } from 'state/slices/portfolioSlice/selectors'
 import {
+  selectAccountSpecifiers,
   selectPortfolioAssets,
   selectPortfolioCryptoBalancesByAccountIdAboveThreshold,
   selectPriceHistoriesLoadingByAssetTimeframe,
   selectPriceHistoryTimeframe,
+  selectTotalStakingDelegationCryptoByAccountSpecifier,
   selectTxsByFilter,
 } from 'state/slices/selectors'
 import { selectRebasesByFilter } from 'state/slices/txHistorySlice/selectors'

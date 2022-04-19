@@ -229,10 +229,8 @@ export const PortfolioProvider = ({ children }: { children: React.ReactNode }) =
       // This block refetches validator data on subsequent Txs in case TVL or APR changed.
       const validators = portfolioAccounts[`${cosmosChainId}:${tx.address}`]?.validatorIds
       validators?.forEach(validatorAddress => {
-        // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
         dispatch(
           validatorDataApi.endpoints.getValidatorData.initiate({
-            chainId: cosmosChainId,
             validatorAddress,
           }),
         )
