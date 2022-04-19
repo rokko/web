@@ -28,11 +28,11 @@ export const Overview: React.FC<StakedProps> = ({
   validatorAddress,
   accountSpecifier,
 }) => {
-  const isLoaded = true // TODO: remove me
   const asset = useAppSelector(state => selectAssetByCAIP19(state, assetId))
   const marketData = useAppSelector(state => selectMarketDataById(state, assetId))
 
   const validatorInfo = useAppSelector(state => selectSingleValidator(state, validatorAddress))
+  const isLoaded = Boolean(validatorInfo)
   const totalBondings = useAppSelector(state =>
     selectTotalBondingsBalanceByAssetId(state, accountSpecifier, validatorAddress, asset.caip19),
   )
