@@ -14,12 +14,7 @@ import { useWallet } from 'hooks/useWallet/useWallet'
 import { useYearnVaults } from 'hooks/useYearnVaults/useYearnVaults'
 import { useFoxyBalances } from 'pages/Defi/hooks/useFoxyBalances'
 import { AccountSpecifier } from 'state/slices/portfolioSlice/portfolioSliceCommon'
-import {
-  selectAccountSpecifier,
-  selectAssetByCAIP19,
-  selectFeatureFlag,
-  selectValidatorIds,
-} from 'state/slices/selectors'
+import { selectAssetByCAIP19, selectFeatureFlag } from 'state/slices/selectors'
 import { useAppSelector } from 'state/store'
 
 import { StakingTable } from './StakingTable'
@@ -48,7 +43,6 @@ export const EarnOpportunities = ({ assetId: caip19 }: EarnOpportunitiesProps) =
   const allRows = useNormalizeOpportunities({
     vaultArray: vaults,
     foxyArray: foxyRows,
-    cosmosActiveStakingOpportunities: [],
     cosmosStakingOpportunities: [],
   }).filter(row => row.tokenAddress.toLowerCase() === asset.tokenId?.toLowerCase())
 

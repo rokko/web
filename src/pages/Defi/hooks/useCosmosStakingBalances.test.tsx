@@ -6,7 +6,6 @@ import { TestProviders } from 'test/TestProviders'
 import { ReduxState } from 'state/reducer'
 import { assets as assetsSlice } from 'state/slices/assetsSlice/assetsSlice'
 import { marketData as marketDataSlice } from 'state/slices/marketDataSlice/marketDataSlice'
-import { stakingData as stakingDataSlice } from 'state/slices/stakingDataSlice/stakingDataSlice'
 import { store } from 'state/store'
 
 import { useCosmosStakingBalances } from './useCosmosStakingBalances'

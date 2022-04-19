@@ -27,7 +27,6 @@ function setup({
   const { result } = renderHook(
     () =>
       useNormalizeOpportunities({
-        cosmosActiveStakingOpportunities: cosmosActiveStakingOpportunities ?? [],
         cosmosStakingOpportunities: cosmosStakingOpportunities ?? [],
         foxyArray: [],
         vaultArray: [],

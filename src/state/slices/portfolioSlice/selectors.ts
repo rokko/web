@@ -2,16 +2,21 @@ import { createSelector } from '@reduxjs/toolkit'
 import { CAIP10, CAIP19 } from '@shapeshiftoss/caip'
 import { chainAdapters } from '@shapeshiftoss/types'
 import { Asset } from '@shapeshiftoss/types'
-import { ValidatorReward } from '@shapeshiftoss/types/dist/chain-adapters/cosmos'
 import reduce from 'lodash/reduce'
 import toLower from 'lodash/toLower'
-import { bn, bnOrZero } from 'lib/bignumber/bignumber'
+import { BN, bn, bnOrZero } from 'lib/bignumber/bignumber'
 import { fromBaseUnit } from 'lib/math'
 import { ReduxState } from 'state/reducer'
 import { createDeepEqualOutputSelector } from 'state/selector-utils'
 import { selectAssets } from 'state/slices/assetsSlice/selectors'
 import { selectMarketData } from 'state/slices/marketDataSlice/selectors'
-import { accountIdToFeeAssetId } from 'state/slices/portfolioSlice/utils'
+import {
+  accountIdToFeeAssetId,
+  btcAssetId,
+  cosmosAssetId,
+  ethAssetId,
+  osmosisAssetId,
+} from 'state/slices/portfolioSlice/utils'
 import { selectBalanceThreshold } from 'state/slices/preferencesSlice/selectors'
 
 import { AccountSpecifier } from '../accountSpecifiersSlice/accountSpecifiersSlice'
@@ -33,12 +38,7 @@ import {
 const SHAPESHIFT_VALIDATOR_ADDRESS = 'cosmosvaloper199mlc7fr6ll5t54w7tts7f4s0cvnqgc59nmuxf'
 
 // We should prob change this once we add more chains
-const FEE_ASSET_IDS = [
-  'eip155:1/slip44:60',
-  'bip122:000000000019d6689c085ae165831e93/slip44:0',
-  'cosmos:cosmoshub-4/slip44:118',
-  'cosmos:osmosis-1/slip44:118',
-]
+const FEE_ASSET_IDS = [ethAssetId, btcAssetId, cosmosAssetId, osmosisAssetId]
 
 const selectAssetIdParamFromFilterOptional = (
   _state: ReduxState,
@@ -818,25 +818,6 @@ export const selectTotalBondingsBalanceByAssetId = createSelector(
   },
 )
 
-export const selectRewardsByAccountSpecifier = createDeepEqualOutputSelector(
-  selectStakingDataByAccountSpecifier,
-  selectValidatorAddress,
-  (stakingData, validatorAddress): chainAdapters.cosmos.Reward[] => {
-    if (!stakingData || !stakingData.rewards) return []
-
-    return stakingData.rewards.reduce(
-      (acc: chainAdapters.cosmos.Reward[], current: ValidatorReward) => {
-        if (current.validator.address !== validatorAddress) return acc
-
-        acc.push(...current.rewards)
-
-        return acc
-      },
-      [],
-    )
-  },
-)
-
 export const selectRewardsByValidator = createDeepEqualOutputSelector(
   selectPortfolioAccounts,
   selectValidatorAddress,
@@ -875,13 +856,14 @@ export const selectStakingOpportunitiesDataFull = createSelector(
       const delegatedAmount = bnOrZero(
         stakingDataByValidator?.[validatorId]?.[assetId]?.delegations?.[0]?.amount,
       ).toString()
-      const undelegatedEntries =
+      const undelegatedEntries: chainAdapters.cosmos.UndelegationEntry[] =
         stakingDataByValidator?.[validatorId]?.[assetId]?.undelegations ?? []
       const totalDelegations = bnOrZero(delegatedAmount)
         .plus(
-          undelegatedEntries.reduce((acc, current) => {
-            return acc.plus(bnOrZero(current.amount))
-          }, bnOrZero(0)),
+          undelegatedEntries.reduce<BN>(
+            (acc, current) => acc.plus(bnOrZero(current.amount)),
+            bnOrZero(0),
+          ),
         )
         .toString()
       return {
@@ -889,7 +871,7 @@ export const selectStakingOpportunitiesDataFull = createSelector(
         // Delegated/Redelegated + Undelegation
         totalDelegations,
         // Rewards at 0 index: since we normalize staking data, we are guaranteed to have only one entry for the validatorId + assetId combination
-        rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards?.[0] ?? '0',
+        rewards: stakingDataByValidator?.[validatorId]?.[assetId]?.rewards?.[0]?.amount ?? '0',
         isLoaded: Boolean(validatorsData[validatorId]),
       }
     }),

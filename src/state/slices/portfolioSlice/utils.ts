@@ -9,7 +9,6 @@ import {
   UtxoAccountType,
 } from '@shapeshiftoss/types'
 import cloneDeep from 'lodash/cloneDeep'
-import get from 'lodash/get'
 import groupBy from 'lodash/groupBy'
 import last from 'lodash/last'
 import toLower from 'lodash/toLower'
@@ -31,13 +30,19 @@ export type UtxoParamsAndAccountType = {
 export const ethChainId = 'eip155:1'
 export const btcChainId = 'bip122:000000000019d6689c085ae165831e93'
 export const cosmosChainId = 'cosmos:cosmoshub-4'
+export const osmosisChainId = 'cosmos:osmosis-1'
+export const ethAssetId = 'eip155:1/slip44:60'
+export const btcAssetId = 'bip122:000000000019d6689c085ae165831e93/slip44:0'
+export const cosmosAssetId = 'cosmos:cosmoshub-4/slip44:118'
+export const osmosisAssetId = 'cosmos:osmosis-1/slip44:118'
 
 // we only need to update this when we support additional chains, which is infrequent
 // so it's ok to hardcode this map here
 const caip2toCaip19: Record<string, string> = {
-  [ethChainId]: 'eip155:1/slip44:60',
-  [btcChainId]: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
-  [cosmosChainId]: 'cosmos:cosmoshub-4/slip44:118',
+  [ethChainId]: ethAssetId,
+  [btcChainId]: btcAssetId,
+  [cosmosChainId]: cosmosAssetId,
+  [osmosisChainId]: osmosisAssetId,
 }
 
 export const assetIdtoChainId = (caip19: CAIP19): string => {
@@ -273,6 +278,7 @@ export const accountToPortfolio: AccountToPortfolio = args => {
       }
       case ChainTypes.Cosmos:
       case ChainTypes.Osmosis: {
+        const cosmosAccount = account as chainAdapters.Account<ChainTypes.Cosmos>
         const { caip2, caip19 } = account
         const accountSpecifier = `${caip2}:${_xpubOrAccount}`
         const accountId = caip10.toCAIP10({ caip2, account: _xpubOrAccount })
@@ -282,11 +288,7 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         portfolio.accounts.byId[accountSpecifier] = {
           assetIds: [],
           stakingData: {
-            delegations: [],
-            undelegations: [],
-            redelegations: [],
-            rewards: [],
-            ...(account.chainSpecific || {}),
+            ...(cosmosAccount.chainSpecific || {}),
           },
           validatorIds: [],
           stakingDataByValidatorId: {},
@@ -297,13 +299,13 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         const uniqueValidatorAddresses = Array.from(
           new Set(
             [
-              get(account, 'chainSpecific.delegations').map(
+              cosmosAccount.chainSpecific.delegations.map(
                 delegation => delegation.validator.address,
               ),
-              get(account, 'chainSpecific.undelegations').map(
+              cosmosAccount.chainSpecific.undelegations.map(
                 undelegation => undelegation.validator.address,
               ),
-              get(account, 'chainSpecific.rewards').map(reward => reward.validator.address),
+              cosmosAccount.chainSpecific.rewards.map(reward => reward.validator.address),
             ].flat(),
           ),
         )
@@ -314,16 +316,16 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         // TODO: Make it its own util?
         // Breaks typings in all sort of ways and dumb time complexity, refactor it
         uniqueValidatorAddresses.forEach(validatorAddress => {
-          const validatorRewards = get(account, 'chainSpecific.rewards').find(
+          const validatorRewards = cosmosAccount.chainSpecific.rewards.find(
             validatorRewards => validatorRewards.validator.address === validatorAddress,
           )
           const rewards = groupBy(validatorRewards?.rewards, rewardEntry => rewardEntry.assetId)
           // TODO: Do we need this? There might only be one entry per validator address actually
-          const delegationEntries = get(account, 'chainSpecific.delegations').filter(
+          const delegationEntries = cosmosAccount.chainSpecific.delegations.filter(
             delegation => delegation.validator.address === validatorAddress,
           )
           // TODO: Do we need this? There might only be one entry per validator address actually
-          const undelegationEntries = get(account, 'chainSpecific.undelegations').find(
+          const undelegationEntries = cosmosAccount.chainSpecific.undelegations.find(
             undelegation => undelegation.validator.address === validatorAddress,
           )
           const delegations = groupBy(delegationEntries, delegationEntry => delegationEntry.assetId)

@@ -1,20 +1,11 @@
 import { ArrowForwardIcon } from '@chakra-ui/icons'
-import {
-  Box,
-  Button,
-  Flex,
-  HStack,
-  Skeleton,
-  SkeletonCircle,
-  Tag,
-  TagLabel,
-} from '@chakra-ui/react'
+import { Box, Button, Flex, HStack, Skeleton, Tag, TagLabel } from '@chakra-ui/react'
 import { CAIP19 } from '@shapeshiftoss/caip'
 import size from 'lodash/size'
 import { AprTag } from 'plugins/cosmos/components/AprTag/AprTag'
 import { MouseEvent, useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Column, Row } from 'react-table'
+import { Row } from 'react-table'
 import { Amount } from 'components/Amount/Amount'
 import { AssetIcon } from 'components/AssetIcon'
 import { Card } from 'components/Card/Card'
@@ -23,7 +14,6 @@ import { RawText, Text } from 'components/Text'
 import { useModal } from 'hooks/useModal/useModal'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
-  ActiveStakingOpportunity,
   selectAccountSpecifier,
   selectAssetByCAIP19,
   selectMarketDataById,
@@ -76,10 +66,9 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
   const hasActiveStaking =
     // More than one opportunity data means we have more than the default opportunity
     size(stakingOpportunitiesData) > 1 ||
-    stakingOpportunitiesData.some(
-      ({ rewards, totalDelegations }) =>
-        bnOrZero(rewards).gt(0) || bnOrZero(totalDelegations).gt(0),
-    )
+    stakingOpportunitiesData.some(({ rewards, totalDelegations }) => {
+      return bnOrZero(rewards).gt(0) || bnOrZero(totalDelegations).gt(0)
+    })
 
   const rows = stakingOpportunitiesData
 
@@ -90,14 +79,14 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
     e.stopPropagation()
   }
 
-  const handleStakedClick = (values: Row<ActiveStakingOpportunity>) => {
+  const handleStakedClick = (values: Row<any>) => {
     cosmosStaking.open({
       assetId,
       validatorAddress: values.original.address,
     })
   }
 
-  const columns: Column<{ validatorId: string; accountSpecifier: string }>[] = useMemo(
+  const columns = useMemo(
     () => [
       {
         Header: <Text translation='defi.validator' />,
@@ -164,11 +153,11 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
       },
       {
         Header: <Text translation='defi.rewards' />,
-        accessor: 'rewards',
+        id: 'rewards',
         display: { base: 'table-cell' },
         Cell: ({ row }: { row: { original: any } }) => {
           const { rewards: validatorRewards, isLoaded } = row.original
-          const rewards = validatorRewards?.amount ?? '0'
+          const rewards = bnOrZero(validatorRewards)
 
           return (
             <Skeleton isLoaded={isLoaded}>

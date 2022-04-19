@@ -139,8 +139,10 @@ const useTransformCosmosStaking = (
         cryptoAmount: staking.cryptoAmount ?? '',
         fiatAmount: staking.fiatAmount ?? '',
         moniker: staking.moniker,
-        version: translate('defi.validatorMoniker', { moniker: staking.moniker }),
-        showAssetSymbol: true,
+        version:
+          !bnOrZero(staking.cryptoAmount).isZero() &&
+          translate('defi.validatorMoniker', { moniker: staking.moniker }),
+        showAssetSymbol: bnOrZero(staking.cryptoAmount).isZero(),
       }
     })
     .sort((opportunityA, opportunityB) => {
