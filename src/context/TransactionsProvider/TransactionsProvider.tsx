@@ -97,6 +97,7 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
           }
         }
 
+        const SHAPESHIFT_VALIDATOR_ADDRESS = 'cosmosvaloper199mlc7fr6ll5t54w7tts7f4s0cvnqgc59nmuxf'
         // RESTfully fetch all tx and rebase history for this chain.
         const chainAccountSpecifiers = getAccountSpecifiersByChainId(chainId)
         if (isEmpty(chainAccountSpecifiers)) continue
@@ -106,7 +107,10 @@ export const TransactionsProvider = ({ children }: TransactionsProviderProps): J
             const cosmosPortfolioAccount =
               portfolioAccounts[`${cosmosChainId}:${cosmosAccountSpecifier}`]
             if (cosmosPortfolioAccount) {
-              cosmosPortfolioAccount.validatorIds?.forEach(validatorAddress => {
+              const validatorIds = cosmosPortfolioAccount.validatorIds?.length
+                ? cosmosPortfolioAccount.validatorIds
+                : [SHAPESHIFT_VALIDATOR_ADDRESS]
+              validatorIds.forEach(validatorAddress => {
                 // and then use .select() to determine loading state on the presence or not of that validator in the RTK slice
                 dispatch(
                   validatorDataApi.endpoints.getValidatorData.initiate({

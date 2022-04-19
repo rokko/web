@@ -23,16 +23,13 @@ import { useModal } from 'hooks/useModal/useModal'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
   ActiveStakingOpportunity,
-  selectAllStakingDataByValidator,
   selectStakingOpportunitiesDataFull,
-  selectValidatorIds,
 } from 'state/slices/portfolioSlice/selectors'
 import {
   selectAccountSpecifier,
   selectAssetByCAIP19,
   selectMarketDataById,
 } from 'state/slices/selectors'
-import { selectAllValidatorsData } from 'state/slices/validatorDataSlice/selectors'
 import { useAppSelector } from 'state/store'
 
 type StakingOpportunitiesProps = {
@@ -80,6 +77,15 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
   const stakingOpportunitiesData = useAppSelector(state =>
     selectStakingOpportunitiesDataFull(state, accountSpecifier, '', assetId),
   )
+
+  const hasActiveStaking =
+    // More than one opportunity data means we have more than the default opportunity
+    stakingOpportunitiesData.length > 1 ||
+    stakingOpportunitiesData.some(
+      ({ rewards, totalDelegations }) =>
+        bnOrZero(rewards).gt(0) || bnOrZero(totalDelegations).gt(0),
+    )
+
   const rows = stakingOpportunitiesData
 
   const { cosmosGetStarted, cosmosStaking } = useModal()
@@ -141,7 +147,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
           const { totalDelegations } = row.original
 
           // TODO: Proper loading state
-          return Boolean(true) ? (
+          return Boolean(hasActiveStaking) ? (
             <Amount.Crypto
               value={bnOrZero(totalDelegations)
                 .div(`1e+${asset.precision}`)
@@ -166,7 +172,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
           const rewards = validatorRewards?.amount ?? '0'
           if (!Object.keys(validatorRewards).length) return null
 
-          return Boolean(Object.keys(validatorRewards)) ? (
+          return Boolean(hasActiveStaking) ? (
             <HStack fontWeight={'normal'}>
               <Amount.Crypto
                 value={bnOrZero(rewards)
@@ -222,10 +228,9 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
       </Card.Header>
       <Card.Body pt={0} px={2}>
         <ReactTable
-          // We just pass normalized validator IDs here. Everything we need can be gotten from selectors
           data={rows}
           columns={columns}
-          displayHeaders={true}
+          displayHeaders={hasActiveStaking}
           onRowClick={handleStakedClick}
         />
       </Card.Body>

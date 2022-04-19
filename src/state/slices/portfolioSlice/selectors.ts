@@ -30,6 +30,8 @@ import {
   makeSortedAccountBalances,
 } from './utils'
 
+const SHAPESHIFT_VALIDATOR_ADDRESS = 'cosmosvaloper199mlc7fr6ll5t54w7tts7f4s0cvnqgc59nmuxf'
+
 // We should prob change this once we add more chains
 const FEE_ASSET_IDS = [
   'eip155:1/slip44:60',
@@ -855,7 +857,11 @@ export const selectValidatorIds = createSelector(
   selectPortfolioAccounts,
   selectAccountSpecifierParamArityFour,
   (portfolioAccounts, accountSpecifier) => {
-    return portfolioAccounts?.[accountSpecifier]?.validatorIds ?? []
+    const portfolioAccount = portfolioAccounts?.[accountSpecifier]
+    if (!portfolioAccount) return []
+    if (!portfolioAccount?.validatorIds?.length) return [SHAPESHIFT_VALIDATOR_ADDRESS]
+
+    return portfolioAccount.validatorIds
   },
 )
 
