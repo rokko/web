@@ -37,8 +37,8 @@ export type AccountSpecifier = string
 
 export type Staking = {
   delegations: chainAdapters.cosmos.Delegation[]
-  redelegations: chainAdapters.cosmos.RedelegationEntry[]
-  undelegations: chainAdapters.cosmos.UndelegationEntry[]
+  redelegations: chainAdapters.cosmos.Redelegation[]
+  undelegations: chainAdapters.cosmos.Undelegation[]
   rewards: chainAdapters.cosmos.Reward[]
 }
 

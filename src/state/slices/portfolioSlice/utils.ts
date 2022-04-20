@@ -288,7 +288,7 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         portfolio.accounts.byId[accountSpecifier] = {
           assetIds: [],
           stakingData: {
-            ...(cosmosAccount.chainSpecific || {}),
+            ...(cosmosAccount.chainSpecific ?? {}),
           },
           validatorIds: [],
           stakingDataByValidatorId: {},

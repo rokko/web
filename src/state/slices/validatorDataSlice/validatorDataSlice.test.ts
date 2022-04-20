@@ -58,8 +58,8 @@ describe('stakingDataSlice', () => {
         store.dispatch(validatorData.actions.clear())
 
         expect(store.getState().validatorData).toEqual({
-          byAccountSpecifier: {},
           byValidator: {},
+          validatorIds: [],
         })
       })
     })
