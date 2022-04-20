@@ -10,8 +10,6 @@ export type PubKey = string
 
 type SingleValidatorDataArgs = { validatorAddress: PubKey }
 
-export type Status = 'idle' | 'loading' | 'loaded'
-
 export type Validators = {
   validators: chainAdapters.cosmos.Validator[]
 }
@@ -49,7 +47,6 @@ export const validatorData = createSlice({
       validatorDataState,
       { payload }: { payload: { validators: chainAdapters.cosmos.Validator[] } },
     ) => {
-      // TODO(gomes): Improve the structure of this when we have cosmos websocket, for now this just inserts
       updateOrInsertValidatorData(validatorDataState, payload.validators)
     },
   },

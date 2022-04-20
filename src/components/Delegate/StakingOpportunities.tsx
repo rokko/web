@@ -80,7 +80,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
     e.stopPropagation()
   }
 
-  const handleStakedClick = (values: Row<any>) => {
+  const handleStakedClick = (values: Row<OpportunitiesDataFull>) => {
     cosmosStaking.open({
       assetId,
       validatorAddress: values.original.address,
@@ -131,7 +131,6 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         Cell: ({ row }: { row: { original: OpportunitiesDataFull } }) => {
           const { isLoaded, totalDelegations } = row.original
 
-          // TODO: Proper loading state
           return (
             <Skeleton isLoaded={isLoaded}>
               {bnOrZero(totalDelegations).gt(0) ? (
