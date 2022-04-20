@@ -64,7 +64,6 @@ describe('useCosmosStakingBalances', () => {
     store.dispatch(stakingDataSlice.actions.setValidatorStatus('loaded'))
 
     const { result } = setup()
-    expect(result.current.activeStakingOpportunities).toEqual([])
     expect(result.current.stakingOpportunities).toMatchSnapshot()
     expect(result.current.isLoaded).toBeTruthy()
     expect(result.current.totalBalance).toEqual('0')
@@ -86,7 +85,6 @@ describe('useCosmosStakingBalances', () => {
     store.dispatch(stakingDataSlice.actions.setValidatorStatus('loaded'))
 
     const { result } = setup()
-    expect(result.current.activeStakingOpportunities).toMatchSnapshot()
     expect(result.current.stakingOpportunities).toMatchSnapshot()
     expect(result.current.isLoaded).toBeTruthy()
     expect(result.current.totalBalance).toEqual('1.17')

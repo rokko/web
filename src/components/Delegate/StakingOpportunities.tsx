@@ -14,6 +14,7 @@ import { RawText, Text } from 'components/Text'
 import { useModal } from 'hooks/useModal/useModal'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
+  OpportunitiesDataFull,
   selectAccountSpecifier,
   selectAssetByCAIP19,
   selectMarketDataById,
@@ -92,7 +93,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         Header: <Text translation='defi.validator' />,
         id: 'moniker',
         display: { base: 'table-cell' },
-        Cell: ({ row }: { row: { original: any } }) => {
+        Cell: ({ row }: { row: { original: OpportunitiesDataFull } }) => {
           const validator = row.original
 
           return (
@@ -111,7 +112,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         Header: <Text translation='defi.apr' />,
         id: 'apr',
         display: { base: 'table-cell' },
-        Cell: ({ row }: { row: { original: any } }) => {
+        Cell: ({ row }: { row: { original: OpportunitiesDataFull } }) => {
           const validator = row.original
 
           return (
@@ -127,7 +128,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         id: 'cryptoAmount',
         isNumeric: true,
         display: { base: 'table-cell' },
-        Cell: ({ row }: { row: { original: any } }) => {
+        Cell: ({ row }: { row: { original: OpportunitiesDataFull } }) => {
           const { isLoaded, totalDelegations } = row.original
 
           // TODO: Proper loading state
@@ -155,7 +156,7 @@ export const StakingOpportunities = ({ assetId }: StakingOpportunitiesProps) => 
         Header: <Text translation='defi.rewards' />,
         id: 'rewards',
         display: { base: 'table-cell' },
-        Cell: ({ row }: { row: { original: any } }) => {
+        Cell: ({ row }: { row: { original: OpportunitiesDataFull } }) => {
           const { rewards: validatorRewards, isLoaded } = row.original
           const rewards = bnOrZero(validatorRewards)
 

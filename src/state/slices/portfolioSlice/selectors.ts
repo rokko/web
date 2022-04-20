@@ -48,6 +48,7 @@ const selectAccountIdParamFromFilterOptional = (
   _state: ReduxState,
   paramFilter: OptionalParamFilter,
 ) => paramFilter.accountId
+
 // TODO: fixme
 const selectAssetIdParamArityFour = (
   _state: ReduxState,
@@ -55,6 +56,17 @@ const selectAssetIdParamArityFour = (
   _validatorAddress: PubKey,
   assetId: CAIP19,
 ) => assetId
+
+export type OpportunitiesDataFull = {
+  totalDelegations: string
+  rewards: string
+  isLoaded: boolean
+  address: string
+  moniker: string
+  tokens: string
+  apr: string
+  commission: string
+}
 
 const selectAccountSpecifierParamArityFour = (_state: ReduxState, accountSpecifier: CAIP10) =>
   accountSpecifier
@@ -97,6 +109,7 @@ export const selectPortfolioFiatBalances = createSelector(
 type OptionalParamFilter = {
   assetId: CAIP19
   accountId?: AccountSpecifier
+  accountSpecifier?: string
 }
 
 type ParamFilter = {
@@ -278,14 +291,16 @@ export const selectAllStakingDataByValidator = createSelector(
 )
 
 export const selectTotalStakingDelegationCryptoByFilter = createSelector(
-  (state: ReduxState, filter) =>
-    selectAllStakingDataByValidator(state, filter.accountSpecifier ?? filter.accountId),
+  (state: ReduxState, filter: OptionalParamFilter) =>
+    selectAllStakingDataByValidator(state, filter.accountSpecifier ?? filter.accountId ?? ''),
   selectAssetIdParamFromFilterOptional,
   (state: ReduxState) => state.assets.byId,
   (stakingData, assetId, assets) => {
-    const stakingDataFilteredByAssetId = stakingData
-      ? Object.values(stakingData).flatMap(validatorStakingData => validatorStakingData[assetId])
-      : {}
+    if (!stakingData) return '0'
+
+    const stakingDataFilteredByAssetId = Object.values(stakingData).flatMap(
+      validatorStakingData => validatorStakingData[assetId],
+    )
     const amount = Object.values(stakingDataFilteredByAssetId)
       .reduce((acc, validatorStakingData) => {
         const delegationsAmount = validatorStakingData.delegations?.[0]?.amount
@@ -786,7 +801,7 @@ export const selectAllUnbondingsEntriesByAssetId = createDeepEqualOutputSelector
 
 export const selectAllUnbondingsEntriesByAssetIdAndValidator = createSelector(
   selectAllUnbondingsEntriesByAssetId,
-  selectValidatorAddressParamArityFour,
+  selectValidatorAddress,
   (unbondingEntries, validatorAddress) => {
     return unbondingEntries[validatorAddress]
   },
@@ -848,7 +863,7 @@ export const selectStakingOpportunitiesDataFull = createSelector(
   selectAllValidatorsData,
   selectAllStakingDataByValidator,
   selectAssetIdParamArityFour,
-  (validatorIds, validatorsData, stakingDataByValidator, assetId) =>
+  (validatorIds, validatorsData, stakingDataByValidator, assetId): OpportunitiesDataFull[] =>
     validatorIds.map(validatorId => {
       const delegatedAmount = bnOrZero(
         stakingDataByValidator?.[validatorId]?.[assetId]?.delegations?.[0]?.amount,

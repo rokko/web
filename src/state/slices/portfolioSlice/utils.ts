@@ -314,7 +314,7 @@ export const accountToPortfolio: AccountToPortfolio = args => {
         portfolio.accounts.byId[accountSpecifier].stakingDataByValidatorId = {}
 
         // TODO: Make it its own util?
-        // Breaks typings in all sort of ways and dumb time complexity, refactor it
+        // This is only ran once on portfolio load and after caching ends so the addditional time complexity isn't so relevant, but it can probably be simplified
         uniqueValidatorAddresses.forEach(validatorAddress => {
           const validatorRewards = cosmosAccount.chainSpecific.rewards.find(
             validatorRewards => validatorRewards.validator.address === validatorAddress,
@@ -342,16 +342,19 @@ export const accountToPortfolio: AccountToPortfolio = args => {
             ]),
           )
 
-          portfolio.accounts.byId[accountSpecifier].stakingDataByValidatorId[validatorAddress] = {}
-          uniqueAssetIds.forEach(assetId => {
-            portfolio.accounts.byId[accountSpecifier].stakingDataByValidatorId[validatorAddress][
-              assetId
-            ] = {
-              delegations: delegations[assetId],
-              undelegations: undelegations[assetId],
-              rewards: rewards[assetId],
-            }
-          })
+          let portfolioAccount = portfolio.accounts.byId[accountSpecifier]
+          if (portfolioAccount.stakingDataByValidatorId) {
+            portfolioAccount.stakingDataByValidatorId[validatorAddress] = {}
+
+            uniqueAssetIds.forEach(assetId => {
+              portfolioAccount.stakingDataByValidatorId[validatorAddress][assetId] = {
+                delegations: delegations[assetId],
+                undelegations: undelegations[assetId],
+                rewards: rewards[assetId],
+                redelegations: [], // We do not use redelegations for now, let's not store them in store
+              }
+            })
+          }
         })
 
         portfolio.accounts.ids.push(accountSpecifier)

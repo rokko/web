@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { ChainAdapter as CosmosChainAdapter } from '@shapeshiftoss/chain-adapters/dist/cosmosSdk/cosmos/CosmosChainAdapter'
 import { chainAdapters } from '@shapeshiftoss/types'
 import { getChainAdapters } from 'context/PluginProvider/PluginProvider'
 
@@ -16,7 +17,6 @@ export type Validators = {
 }
 
 export type ValidatorData = {
-  validatorStatus: Status
   byValidator: ValidatorDataByPubKey
   validatorIds: string[]
 }
@@ -28,7 +28,6 @@ export type ValidatorDataByPubKey = {
 const initialState: ValidatorData = {
   byValidator: {},
   validatorIds: [],
-  validatorStatus: 'idle',
 }
 
 const updateOrInsertValidatorData = (
@@ -41,16 +40,11 @@ const updateOrInsertValidatorData = (
   })
 }
 
-type StatusPayload = { payload: Status }
-
 export const validatorData = createSlice({
   name: 'validatorData',
   initialState,
   reducers: {
     clear: () => initialState,
-    setValidatorStatus: (state, { payload }: StatusPayload) => {
-      state.validatorStatus = payload
-    },
     upsertValidatorData: (
       validatorDataState,
       { payload }: { payload: { validators: chainAdapters.cosmos.Validator[] } },
@@ -74,8 +68,7 @@ export const validatorDataApi = createApi({
     getValidatorData: build.query<chainAdapters.cosmos.Validator, SingleValidatorDataArgs>({
       queryFn: async ({ validatorAddress }, { dispatch }) => {
         const chainAdapters = getChainAdapters()
-        const adapter = await chainAdapters.byChainId(cosmosChainId)
-        dispatch(validatorData.actions.setValidatorStatus('loading'))
+        const adapter = (await chainAdapters.byChainId(cosmosChainId)) as CosmosChainAdapter
         try {
           const data = await adapter.getValidator(validatorAddress)
           dispatch(
@@ -94,8 +87,6 @@ export const validatorDataApi = createApi({
               status: 500,
             },
           }
-        } finally {
-          dispatch(validatorData.actions.setValidatorStatus('loaded'))
         }
       },
     }),
