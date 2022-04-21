@@ -28,6 +28,7 @@ import {
   PortfolioAssets,
   PortfolioBalancesById,
 } from 'state/slices/portfolioSlice/portfolioSliceCommon'
+import { cosmosAssetId } from 'state/slices/portfolioSlice/utils'
 import {
   selectAccountSpecifiers,
   selectPortfolioAssets,
@@ -349,7 +350,7 @@ export const useBalanceChartData: UseBalanceChartData = args => {
   const cosmosAccountId = account ? caip10.toCAIP10({ caip2: cosmosChainId, account }) : ''
 
   const delegationTotal = useAppSelector(state =>
-    selectTotalStakingDelegationCryptoByAccountSpecifier(state, cosmosAccountId),
+    selectTotalStakingDelegationCryptoByAccountSpecifier(state, cosmosAccountId, '', cosmosAssetId),
   )
 
   const portfolioAssets = useSelector(selectPortfolioAssets)

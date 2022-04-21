@@ -753,11 +753,15 @@ export type AmountByValidatorAddressType = {
 
 export const selectTotalStakingDelegationCryptoByAccountSpecifier = createSelector(
   selectStakingDataByAccountSpecifier,
+  selectAssetIdParamArityFour,
   // We make the assumption that all delegation rewards come from a single denom (asset)
   // In the future there may be chains that support rewards in multiple denoms and this will need to be parsed differently
-  stakingData => {
+  (stakingData, assetId) => {
+    const delegations = Object.values(stakingData || {}).flatMap(
+      validatorStaking => validatorStaking[assetId].delegations?.[0],
+    )
     const amount = reduce(
-      stakingData?.delegations,
+      delegations,
       (acc, delegation) => acc.plus(bnOrZero(delegation.amount)),
       bn(0),
     )
