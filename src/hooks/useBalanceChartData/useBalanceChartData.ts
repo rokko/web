@@ -332,24 +332,24 @@ export const useBalanceChartData: UseBalanceChartData = args => {
 
   // Get total delegation
   // TODO(ryankk): consolidate accountSpecifiers creation to be the same everywhere
-  const cosmosCaip2: CAIP2 = caip2.toCAIP2({
+  const cosmosChainId: CAIP2 = caip2.toCAIP2({
     chain: ChainTypes.Cosmos,
     network: NetworkTypes.COSMOSHUB_MAINNET,
   })
 
   const accountSpecifiers = useSelector(selectAccountSpecifiers)
   const account = accountSpecifiers.reduce((acc, accountSpecifier) => {
-    if (accountSpecifier[cosmosCaip2]) {
-      acc = accountSpecifier[cosmosCaip2]
+    if (accountSpecifier[cosmosChainId]) {
+      acc = accountSpecifier[cosmosChainId]
     }
     return acc
   }, '')
 
   // TODO(ryankk): this needs to be removed once staking data is keyed by accountSpecifier instead of caip10
-  const cosmosCaip10 = account ? caip10.toCAIP10({ caip2: cosmosCaip2, account }) : ''
+  const cosmosAccountId = account ? caip10.toCAIP10({ caip2: cosmosChainId, account }) : ''
 
   const delegationTotal = useAppSelector(state =>
-    selectTotalStakingDelegationCryptoByAccountSpecifier(state, cosmosCaip10),
+    selectTotalStakingDelegationCryptoByAccountSpecifier(state, cosmosAccountId),
   )
 
   const portfolioAssets = useSelector(selectPortfolioAssets)
