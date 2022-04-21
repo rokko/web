@@ -80,7 +80,6 @@ describe.skip('useCosmosStakingBalances', () => {
 
     const { result } = setup()
     expect(result.current.stakingOpportunities).toMatchSnapshot()
-    expect(result.current.isLoaded).toBeTruthy()
     expect(result.current.totalBalance).toEqual('1.17')
   })
 })

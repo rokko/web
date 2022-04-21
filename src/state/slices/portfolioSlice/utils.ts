@@ -15,6 +15,7 @@ import toLower from 'lodash/toLower'
 import { bn, bnOrZero } from 'lib/bignumber/bignumber'
 
 import { AccountSpecifier } from '../accountSpecifiersSlice/accountSpecifiersSlice'
+import { PubKey } from '../validatorDataSlice/validatorDataSlice'
 import {
   initialState,
   Portfolio,
@@ -299,7 +300,7 @@ export const accountToPortfolio: AccountToPortfolio = args => {
 
         portfolio.accounts.byId[accountSpecifier].assetIds.push(caip19)
         // TODO: refactor this before review
-        const uniqueValidatorAddresses = Array.from(
+        const uniqueValidatorAddresses: PubKey[] = Array.from(
           new Set(
             [
               cosmosAccount.chainSpecific.delegations.map(
@@ -350,11 +351,15 @@ export const accountToPortfolio: AccountToPortfolio = args => {
             portfolioAccount.stakingDataByValidatorId[validatorAddress] = {}
 
             uniqueAssetIds.forEach(assetId => {
-              portfolioAccount.stakingDataByValidatorId[validatorAddress][assetId] = {
-                delegations: delegations[assetId],
-                undelegations: undelegations[assetId],
-                rewards: rewards[assetId],
-                redelegations: [], // We do not use redelegations for now, let's not store them in store
+              // Just to make TS happy, we are sure this is defined because of the assignment before the forEach
+              // However, forEach being its own scope loses the narrowing
+              if (portfolioAccount?.stakingDataByValidatorId?.[validatorAddress]) {
+                portfolioAccount.stakingDataByValidatorId[validatorAddress][assetId] = {
+                  delegations: delegations[assetId],
+                  undelegations: undelegations[assetId],
+                  rewards: rewards[assetId],
+                  redelegations: [], // We do not use redelegations for now, let's not store them in store
+                }
               }
             })
           }
