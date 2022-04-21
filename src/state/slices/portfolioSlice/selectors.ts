@@ -77,7 +77,7 @@ export type OpportunitiesDataFull = {
   commission: string
 }
 
-const selectAccountSpecifierParamArityFour = (_state: ReduxState, accountSpecifier: CAIP10) =>
+const selectAccountSpecifierParam = (_state: ReduxState, accountSpecifier: CAIP10) =>
   accountSpecifier
 
 export const selectPortfolioAccounts = (state: ReduxState) => state.portfolio.accounts.byId
@@ -306,7 +306,7 @@ export const selectPortfolioCryptoHumanBalanceByFilter = createSelector(
 
 export const selectStakingDataByAccountSpecifier = createSelector(
   selectPortfolioAccounts,
-  selectAccountSpecifierParamArityFour,
+  selectAccountSpecifierParam,
   (portfolioAccounts, accountSpecifier) => {
     return portfolioAccounts?.[accountSpecifier]?.stakingDataByValidatorId || null
   },
@@ -314,7 +314,7 @@ export const selectStakingDataByAccountSpecifier = createSelector(
 
 export const selectAllStakingDataByValidator = createSelector(
   selectPortfolioAccounts,
-  selectAccountSpecifierParamArityFour,
+  selectAccountSpecifierParam,
   (portfolioAccounts, accountSpecifier) => {
     return portfolioAccounts?.[accountSpecifier]?.stakingDataByValidatorId
   },
@@ -818,7 +818,7 @@ export const selectTotalBondingsBalanceByAssetId = createSelector(
 export const selectRewardsByValidator = createDeepEqualOutputSelector(
   selectPortfolioAccounts,
   selectValidatorAddress,
-  selectAccountSpecifierParamArityFour,
+  selectAccountSpecifierParam,
   selectAssetIdParamArityFour,
   (allPortfolioAccounts, validatorAddress, accountSpecifier, assetId): string => {
     const cosmosAccount = allPortfolioAccounts?.[accountSpecifier]
@@ -833,7 +833,7 @@ export const selectRewardsByValidator = createDeepEqualOutputSelector(
 
 export const selectValidatorIds = createSelector(
   selectPortfolioAccounts,
-  selectAccountSpecifierParamArityFour,
+  selectAccountSpecifierParam,
   (portfolioAccounts, accountSpecifier): PubKey[] => {
     const portfolioAccount = portfolioAccounts?.[accountSpecifier]
     if (!portfolioAccount) return []
