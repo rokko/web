@@ -9,9 +9,9 @@ import { UnbondingRow } from 'plugins/cosmos/components/UnbondingRow/UnbondingRo
 import { Text } from 'components/Text'
 import { bnOrZero } from 'lib/bignumber/bignumber'
 import {
-  selectAllUnbondingsEntriesByAssetIdAndValidator,
   selectRewardsByValidator,
   selectTotalBondingsBalanceByAssetId,
+  selectUnbondingEntriesByAccountSpecifier,
 } from 'state/slices/portfolioSlice/selectors'
 import { selectAssetByCAIP19, selectMarketDataById } from 'state/slices/selectors'
 import { selectSingleValidator } from 'state/slices/validatorDataSlice/selectors'
@@ -37,7 +37,7 @@ export const Overview: React.FC<StakedProps> = ({
     selectTotalBondingsBalanceByAssetId(state, accountSpecifier, validatorAddress, asset.caip19),
   )
   const undelegationEntries = useAppSelector(state =>
-    selectAllUnbondingsEntriesByAssetIdAndValidator(
+    selectUnbondingEntriesByAccountSpecifier(
       state,
       accountSpecifier,
       validatorAddress,

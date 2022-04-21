@@ -29,6 +29,7 @@ export type EarnOpportunityType = {
   chain: ChainTypes
   moniker?: string
   showAssetSymbol?: boolean
+  isLoaded: boolean
 }
 
 const useTransformVault = (vaults: SupportedYearnVault[]): EarnOpportunityType[] => {
@@ -65,6 +66,7 @@ const useTransformVault = (vaults: SupportedYearnVault[]): EarnOpportunityType[]
       assetId: assetCAIP19,
       fiatAmount,
       cryptoAmount,
+      isLoaded: true,
     }
     // show vaults that are expired but have a balance
     // show vaults that don't have an APY but have a balance
@@ -116,6 +118,7 @@ const transformFoxy = (foxies: MergedFoxyOpportunity[]): EarnOpportunityType[] =
       assetId,
       fiatAmount,
       cryptoAmount,
+      isLoaded: true,
     }
   })
 }
@@ -143,6 +146,7 @@ const useTransformCosmosStaking = (
           !bnOrZero(staking.cryptoAmount).isZero() &&
           translate('defi.validatorMoniker', { moniker: staking.moniker }),
         showAssetSymbol: bnOrZero(staking.cryptoAmount).isZero(),
+        isLoaded: Boolean(staking.apr),
       }
     })
     .sort((opportunityA, opportunityB) => {

@@ -39,9 +39,7 @@ export const OpportunityCardList = ({ balances }: { balances: UseEarnBalancesRet
         gridGap={6}
       >
         {activeOpportunities.map(opportunity => {
-          return (
-            <OpportunityCard isLoaded={true} key={opportunity.contractAddress} {...opportunity} />
-          )
+          return <OpportunityCard key={opportunity.contractAddress} {...opportunity} />
         })}
       </SimpleGrid>
       {activeOpportunities.length === 0 && (

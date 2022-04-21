@@ -18,7 +18,6 @@ type UseCosmosStakingBalancesProps = {
 export type UseCosmosStakingBalancesReturn = {
   stakingOpportunities: MergedStakingOpportunity[]
   totalBalance: string
-  isLoaded: boolean
 }
 
 export type MergedActiveStakingOpportunity = ActiveStakingOpportunity & {
@@ -54,6 +53,7 @@ export function useCosmosStakingBalances({
   // Finally, we have a totalBalance - this can be added at selector-level
   // The loading state is not needed anymore
   const mergedActiveStakingOpportunities = useMemo(() => {
+    if (!marketData?.price) return []
     return Object.values(stakingOpportunities).map(opportunity => {
       const fiatAmount = bnOrZero(opportunity.totalDelegations)
         .div(`1e+${asset.precision}`)
@@ -94,7 +94,6 @@ export function useCosmosStakingBalances({
 
   return {
     stakingOpportunities: mergedActiveStakingOpportunities,
-    isLoaded: true,
     totalBalance: totalBalance.toString(),
   }
 }

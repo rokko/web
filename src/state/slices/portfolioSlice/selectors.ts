@@ -278,7 +278,7 @@ export const selectStakingDataByAccountSpecifier = createSelector(
   selectPortfolioAccounts,
   selectAccountSpecifierParamArityFour,
   (portfolioAccounts, accountSpecifier) => {
-    return portfolioAccounts?.[accountSpecifier]?.stakingData || null
+    return portfolioAccounts?.[accountSpecifier]?.stakingDataByValidatorId || null
   },
 )
 
@@ -736,30 +736,12 @@ export const selectTotalStakingDelegationCryptoByAccountSpecifier = createSelect
   },
 )
 
-export const selectAllDelegationsCryptoAmountByAssetId = createSelector(
-  selectStakingDataByAccountSpecifier,
-  selectAssetIdParamArityFour,
-  (stakingData, selectedAssetId): Record<PubKey, string> => {
-    if (!stakingData || !stakingData.delegations?.length) return {}
-
-    const delegations = stakingData.delegations.reduce(
-      (acc: AmountByValidatorAddressType, { assetId, amount, validator: { address } }) => {
-        if (assetId !== selectedAssetId) return acc
-
-        acc[address] = amount
-        return acc
-      },
-      {},
-    )
-    return delegations
-  },
-)
-
 export const selectDelegationCryptoAmountByAssetIdAndValidator = createSelector(
-  selectAllDelegationsCryptoAmountByAssetId,
+  selectStakingDataByAccountSpecifier,
   selectValidatorAddress,
-  (allDelegations, validatorAddress): string => {
-    return allDelegations[validatorAddress] ?? '0'
+  selectAssetIdParamArityFour,
+  (stakingData, validatorAddress, assetId): string => {
+    return stakingData?.[validatorAddress][assetId]?.delegations[0]?.amount ?? '0'
   },
 )
 
@@ -773,36 +755,6 @@ export const selectUnbondingEntriesByAccountSpecifier = createDeepEqualOutputSel
     if (!validatorStakingData?.undelegations?.length) return []
 
     return validatorStakingData.undelegations
-  },
-)
-
-export const selectAllUnbondingsEntriesByAssetId = createDeepEqualOutputSelector(
-  selectStakingDataByAccountSpecifier,
-  selectAssetIdParamArityFour,
-  (stakingData, selectedAssetId): Record<PubKey, chainAdapters.cosmos.UndelegationEntry[]> => {
-    if (!stakingData || !stakingData.undelegations) return {}
-
-    let initial: Record<PubKey, chainAdapters.cosmos.UndelegationEntry[]> = {}
-
-    const validators = stakingData.undelegations.reduce((acc, { validator, entries }) => {
-      if (!acc[validator.address]) {
-        acc[validator.address] = []
-      }
-
-      acc[validator.address].push(...entries.filter(x => x.assetId === selectedAssetId))
-
-      return acc
-    }, initial)
-
-    return validators
-  },
-)
-
-export const selectAllUnbondingsEntriesByAssetIdAndValidator = createSelector(
-  selectAllUnbondingsEntriesByAssetId,
-  selectValidatorAddress,
-  (unbondingEntries, validatorAddress) => {
-    return unbondingEntries[validatorAddress]
   },
 )
 
@@ -848,7 +800,7 @@ export const selectRewardsByValidator = createDeepEqualOutputSelector(
 export const selectValidatorIds = createSelector(
   selectPortfolioAccounts,
   selectAccountSpecifierParamArityFour,
-  (portfolioAccounts, accountSpecifier) => {
+  (portfolioAccounts, accountSpecifier): PubKey[] => {
     const portfolioAccount = portfolioAccounts?.[accountSpecifier]
     if (!portfolioAccount) return []
     if (!portfolioAccount?.validatorIds?.length) return [SHAPESHIFT_VALIDATOR_ADDRESS]
