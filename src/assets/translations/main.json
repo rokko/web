@@ -55,7 +55,8 @@
     "approveOnWallet": "Approve On Wallet",
     "confirmOnWallet": "Confirm On Wallet",
     "login": "Log In",
-    "notRobot": "I am not a Robot"
+    "notRobot": "I am not a Robot",
+    "priceImpactHigh" : "Price Impact Too High"
   },
   "updateToast": {
     "body": "A new version of the app is available",
@@ -337,6 +338,7 @@
     "estimatedGasFee": "Estimated Gas Fee",
     "approvingAsset": "Approving %{symbol}",
     "viewTransaction": "View Transaction",
+    "priceImpact" : "Price impact",
     "tooltip": {
       "rate": "This is the expected rate for this trade pair.",
       "minerFee": "This is the fee to process the transaction on the blockchain, this is not a fee charged by ShapeShift.",

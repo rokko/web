@@ -1,7 +1,7 @@
 import { Box, Button, FormControl, FormErrorMessage, IconButton, useToast } from '@chakra-ui/react'
 import { AssetNamespace } from '@shapeshiftoss/caip'
 import { ChainTypes, SwapperType } from '@shapeshiftoss/types'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Controller, useFormContext, useWatch } from 'react-hook-form'
 import { FaArrowsAltV } from 'react-icons/fa'
 import NumberFormat from 'react-number-format'
@@ -192,14 +192,46 @@ export const TradeInput = ({ history }: RouterProps) => {
       return 'common.insufficientAmountForGas'
     }
 
+    if (isOver) {
+      return 'common.priceImpactHigh'
+    }
+
     return error ?? 'trade.previewTrade'
   }
 
+  const { isOver, isGood, isMedium, priceImpactPercent } = useMemo(() => {
+    let isOver = false
+    let isGood = false
+    let isMedium = false
+    const priceImpactPercent = Number(quote?.priceImpact).toFixed(2) * 100
+    if (priceImpactPercent > 14) {
+      isOver = true
+    }
+    if (priceImpactPercent <= 14 && priceImpactPercent > 4) {
+      isMedium = true
+    }
+    if (priceImpactPercent <= 4) {
+      isGood = true
+    }
+    return {
+      isOver,
+      isGood,
+      isMedium,
+      priceImpactPercent,
+    }
+  }, [quote])
+
+
+  const getColorText = () => {
+    if (isOver) return 'red'
+    if (isMedium) return 'yellow'
+    if (isGood) return 'green'
+  }
   // TODO:(ryankk) fix error handling
   const error = errors?.quote?.value?.message ?? null
-
   return (
     <SlideTransition>
+      <p>CIao ciao ciao ciao</p>
       <Box as='form' onSubmit={handleSubmit(onSubmit)} mb={2}>
         <Card variant='unstyled'>
           <Card.Header textAlign='center' px={0} pt={0}>
@@ -350,12 +382,15 @@ export const TradeInput = ({ history }: RouterProps) => {
               size='lg'
               width='full'
               colorScheme={
-                error || (isValid && (!hasEnoughBalanceForGas || !hasValidTradeBalance) && !action)
+                isOver ||
+                error ||
+                (isValid && (!hasEnoughBalanceForGas || !hasValidTradeBalance) && !action)
                   ? 'red'
                   : 'blue'
               }
               isLoading={isSubmitting || isSendMaxLoading || !!action}
               isDisabled={
+                isOver ||
                 !isDirty ||
                 !isValid ||
                 !!action ||
@@ -371,6 +406,10 @@ export const TradeInput = ({ history }: RouterProps) => {
             >
               <Text translation={getTranslationKey()} />
             </Button>
+            <Box style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text translation='trade.priceImpact' />
+              <RawText color={getColorText()}>{priceImpactPercent}%</RawText>
+            </Box>
           </Card.Body>
         </Card>
       </Box>
